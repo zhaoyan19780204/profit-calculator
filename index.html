@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播带货盈利计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .section {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .price-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .price-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .price-option.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .price-option .price {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .price-option .unit {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 16px;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        
+        .result-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .result-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .result-value.profit {
+            color: #4ade80;
+        }
+        
+        .result-value.loss {
+            color: #f87171;
+        }
+        
+        .analysis-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .analysis-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .analysis-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .analysis-item span:last-child {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .roi-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .roi-value {
+            font-weight: 600;
+        }
+        
+        .tips {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+            padding: 12px 16px;
+            margin-top: 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: #92400e;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 400px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .price-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 直播带货盈利计算器</h1>
+            <p>输入参数，测算盈利情况</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">基础参数</div>
+            
+            <div class="form-group">
+                <label>客单价选择</label>
+                <div class="price-selector">
+                    <div class="price-option active" data-price="59.9" onclick="selectPrice(this)">
+                        <div class="price">¥59.9</div>
+                        <div class="unit">基础款</div>
+                    </div>
+                    <div class="price-option" data-price="118" onclick="selectPrice(this)">
+                        <div class="price">¥118</div>
+                        <div class="unit">升级款</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>投流金额（元/天）</label>
+                    <input type="number" id="adSpend" value="500" min="0" step="1">
+                </div>
+                <div class="form-group">
+                    <label>每日销售单量（单）</label>
+                    <input type="number" id="dailyOrders" value="50" min="0" step="1">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>退款率（%）</label>
+                    <input type="number" id="refundRate" value="10" min="0" max="100" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>单个成本（元/件）</label>
+                    <input type="number" id="productCost" value="20" min="0" step="0.1">
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">人力成本</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>主播每小时工资（元）</label>
+                    <input type="number" id="anchorWage" value="100" min="0" step="1">
+                </div>
+                <div class="form-group">
+                    <label>每日销售时长（小时）</label>
+                    <input type="number" id="dailyHours" value="4" min="0" step="0.5">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>房租水电宽带（元/月）</label>
+                    <input type="number" id="rentCost" value="3000" min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label>其他员工费用（元/月）</label>
+                    <input type="number" id="staffCost" value="5000" min="0" step="100">
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">私域转化参数</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>加微率（%）</label>
+                    <input type="number" id="wechatRate" value="30" min="0" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label>进群率（%）</label>
+                    <input type="number" id="groupRate" value="80" min="0" max="100" step="1">
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">二转参数</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>二转转率（%）</label>
+                    <input type="number" id="convert2Rate" value="20" min="0" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label>二转客单价（元）</label>
+                    <input type="number" id="price2" value="299" min="0" step="1">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>二转分佣（%）</label>
+                <input type="number" id="commission2" value="30" min="0" max="100" step="1">
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">三转参数</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>三转转率（%）</label>
+                    <input type="number" id="convert3Rate" value="10" min="0" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label>三转客单价（元）</label>
+                    <input type="number" id="price3" value="999" min="0" step="1">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>三转分佣（%）</label>
+                <input type="number" id="commission3" value="20" min="0" max="100" step="1">
+            </div>
+        </div>
+        
+        <div class="section">
+            <button class="calculate-btn" onclick="calculate()">立即计算</button>
+        </div>
+        
+        <div id="resultSection" class="section hidden">
+            <div class="section-title">计算结果</div>
+            
+            <div class="result-card">
+                <div class="result-row">
+                    <span class="result-label">ROI（投资回报率）</span>
+                    <span class="roi-display">
+                        <span id="roiValue" class="roi-value">-</span>
+                    </span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">日利润</span>
+                    <span id="dailyProfit" class="result-value">-</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">月利润</span>
+                    <span id="monthlyProfit" class="result-value">-</span>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <div class="analysis-title">📊 盈亏平衡分析</div>
+                <div class="analysis-item">
+                    <span>保本销量（每日最少需卖出）</span>
+                    <span id="breakevenOrders">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>最大可承受投流金额</span>
+                    <span id="maxAdSpend">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>安全边际率</span>
+                    <span id="safetyMargin">-</span>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <div class="analysis-title">💰 收入构成</div>
+                <div class="analysis-item">
+                    <span>销售收入（日）</span>
+                    <span id="salesRevenue">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>二转收入（日）</span>
+                    <span id="revenue2">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>三转收入（日）</span>
+                    <span id="revenue3">-</span>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <div class="analysis-title">📉 成本构成（日）</div>
+                <div class="analysis-item">
+                    <span>产品成本</span>
+                    <span id="costProduct">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>投流成本</span>
+                    <span id="costAd">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>主播工资</span>
+                    <span id="costAnchor">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>房租水电（日均）</span>
+                    <span id="costRent">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>其他员工（日均）</span>
+                    <span id="costStaff">-</span>
+                </div>
+            </div>
+            
+            <div id="tipsBox" class="tips hidden"></div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedPrice = 59.9;
+        
+        function selectPrice(element) {
+            document.querySelectorAll('.price-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedPrice = parseFloat(element.dataset.price);
+        }
+        
+        function getValue(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+        
+        function formatMoney(value) {
+            const formatted = Math.abs(value).toFixed(2);
+            if (value < 0) {
+                return '-¥' + formatted;
+            }
+            return '¥' + formatted;
+        }
+        
+        function calculate() {
+            // 获取所有参数
+            const adSpend = getValue('adSpend');
+            const dailyOrders = getValue('dailyOrders');
+            const refundRate = getValue('refundRate') / 100;
+            const productCost = getValue('productCost');
+            const anchorWage = getValue('anchorWage');
+            const dailyHours = getValue('dailyHours');
+            const rentCost = getValue('rentCost');
+            const staffCost = getValue('staffCost');
+            const wechatRate = getValue('wechatRate') / 100;
+            const groupRate = getValue('groupRate') / 100;
+            const convert2Rate = getValue('convert2Rate') / 100;
+            const price2 = getValue('price2');
+            const commission2 = getValue('commission2') / 100;
+            const convert3Rate = getValue('convert3Rate') / 100;
+            const price3 = getValue('price3');
+            const commission3 = getValue('commission3') / 100;
+            
+            // 有效订单数（扣除退款）
+            const validOrders = dailyOrders * (1 - refundRate);
+            
+            // 销售收入
+            const salesRevenue = validOrders * selectedPrice;
+            
+            // ROI计算
+            const roi = adSpend > 0 ? (salesRevenue / adSpend).toFixed(2) : 0;
+            
+            // 产品成本
+            const costProduct = validOrders * productCost;
+            
+            // 二转收入
+            const revenue2 = validOrders * wechatRate * groupRate * convert2Rate * price2 * (1 - commission2);
+            
+            // 三转收入
+            const revenue3 = validOrders * wechatRate * groupRate * convert2Rate * convert3Rate * price3 * (1 - commission3);
+            
+            // 主播工资
+            const costAnchor = anchorWage * dailyHours;
+            
+            // 日均固定成本
+            const dailyRent = rentCost / 30;
+            const dailyStaff = staffCost / 30;
+            
+            // 日利润
+            const dailyProfit = salesRevenue - costProduct - adSpend - costAnchor - dailyRent - dailyStaff + revenue2 + revenue3;
+            
+            // 月利润
+            const monthlyProfit = dailyProfit * 30;
+            
+            // 盈亏平衡分析
+            // 计算每日固定成本
+            const fixedDailyCost = costAnchor + dailyRent + dailyStaff;
+            
+            // 单件毛利（不含私域转化）
+            const unitMargin = selectedPrice - productCost;
+            
+            // 计算保本销量（考虑私域转化的平均贡献）
+            const avgPrivateRevenue = (revenue2 + revenue3) / Math.max(validOrders, 1);
+            const effectiveMargin = unitMargin + avgPrivateRevenue;
+            
+            let breakevenOrders = 0;
+            if (effectiveMargin > 0) {
+                breakevenOrders = Math.ceil((fixedDailyCost + adSpend) / effectiveMargin);
+            }
+            
+            // 最大可承受投流金额（当前销量下）
+            const maxAdSpend = Math.max(0, salesRevenue - costProduct - fixedDailyCost + revenue2 + revenue3);
+            
+            // 安全边际率
+            const safetyMargin = dailyOrders > 0 ? ((dailyOrders - breakevenOrders) / dailyOrders * 100).toFixed(1) : 0;
+            
+            // 显示结果
+            document.getElementById('resultSection').classList.remove('hidden');
+            
+            document.getElementById('roiValue').textContent = roi;
+            
+            const dailyProfitEl = document.getElementById('dailyProfit');
+            dailyProfitEl.textContent = formatMoney(dailyProfit);
+            dailyProfitEl.className = 'result-value ' + (dailyProfit >= 0 ? 'profit' : 'loss');
+            
+            const monthlyProfitEl = document.getElementById('monthlyProfit');
+            monthlyProfitEl.textContent = formatMoney(monthlyProfit);
+            monthlyProfitEl.className = 'result-value ' + (monthlyProfit >= 0 ? 'profit' : 'loss');
+            
+            document.getElementById('breakevenOrders').textContent = breakevenOrders + ' 单';
+            document.getElementById('maxAdSpend').textContent = formatMoney(maxAdSpend);
+            document.getElementById('safetyMargin').textContent = safetyMargin + '%';
+            
+            document.getElementById('salesRevenue').textContent = formatMoney(salesRevenue);
+            document.getElementById('revenue2').textContent = formatMoney(revenue2);
+            document.getElementById('revenue3').textContent = formatMoney(revenue3);
+            
+            document.getElementById('costProduct').textContent = formatMoney(costProduct);
+            document.getElementById('costAd').textContent = formatMoney(adSpend);
+            document.getElementById('costAnchor').textContent = formatMoney(costAnchor);
+            document.getElementById('costRent').textContent = formatMoney(dailyRent);
+            document.getElementById('costStaff').textContent = formatMoney(dailyStaff);
+            
+            // 提示信息
+            const tipsBox = document.getElementById('tipsBox');
+            if (dailyProfit < 0) {
+                tipsBox.classList.remove('hidden');
+                tipsBox.innerHTML = '⚠️ 当前处于亏损状态！建议：降低投流金额、提高转化率或降低成本。';
+            } else if (parseFloat(safetyMargin) < 20) {
+                tipsBox.classList.remove('hidden');
+                tipsBox.innerHTML = '💡 安全边际较低，建议预留更多buffer应对市场波动。';
+            } else {
+                tipsBox.classList.add('hidden');
+            }
+            
+            // 滚动到结果区域
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 页面加载时自动计算一次
+        window.onload = function() {
+            calculate();
+        };
+    </script>
+</body>
+</html>
