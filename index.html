@@ -289,22 +289,27 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>投流金额（元/天）</label>
-                    <input type="number" id="adSpend" value="500" min="0" step="1">
+                    <input type="number" id="adSpend" value="10000" min="0" step="1" oninput="updateDailyOrders()">
                 </div>
                 <div class="form-group">
-                    <label>每日销售单量（单）</label>
-                    <input type="number" id="dailyOrders" value="50" min="0" step="1">
+                    <label>ROI</label>
+                    <input type="number" id="roi" value="3" min="0" step="0.1" oninput="updateDailyOrders()">
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label>每日销售量（单）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">= 投流金额 × ROI ÷ 客单价（自动计算）</span></label>
+                <div id="dailyOrdersDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label>退款率（%）</label>
-                    <input type="number" id="refundRate" value="10" min="0" max="100" step="0.1">
+                    <input type="number" id="refundRate" value="37" min="0" max="100" step="0.1">
                 </div>
                 <div class="form-group">
                     <label>单个成本（元/件）</label>
-                    <input type="number" id="productCost" value="20" min="0" step="0.1">
+                    <input type="number" id="productCost" value="15" min="0" step="0.1">
                 </div>
             </div>
         </div>
@@ -399,12 +404,6 @@
             
             <div class="result-card">
                 <div class="result-row">
-                    <span class="result-label">ROI（投资回报率）</span>
-                    <span class="roi-display">
-                        <span id="roiValue" class="roi-value">-</span>
-                    </span>
-                </div>
-                <div class="result-row">
                     <span class="result-label">日利润</span>
                     <span id="dailyProfit" class="result-value">-</span>
                 </div>
@@ -481,6 +480,14 @@
             document.querySelectorAll('.price-option').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             selectedPrice = parseFloat(element.dataset.price);
+            updateDailyOrders();
+        }
+        
+        function updateDailyOrders() {
+            const adSpend = getValue('adSpend');
+            const roi = getValue('roi');
+            const dailyOrders = selectedPrice > 0 ? Math.round(adSpend * roi / selectedPrice) : 0;
+            document.getElementById('dailyOrdersDisplay').textContent = dailyOrders + ' 单';
         }
         
         function getValue(id) {
@@ -498,7 +505,7 @@
         function calculate() {
             // 获取所有参数
             const adSpend = getValue('adSpend');
-            const dailyOrders = getValue('dailyOrders');
+            const roiInput = getValue('roi');
             const refundRate = getValue('refundRate') / 100;
             const productCost = getValue('productCost');
             const anchorWage = getValue('anchorWage');
@@ -514,15 +521,17 @@
             const price3 = getValue('price3');
             const commission3 = getValue('commission3') / 100;
             
+            // 每日销售单量 = 投流金额 × ROI ÷ 客单价
+            const dailyOrders = selectedPrice > 0 ? Math.round(adSpend * roiInput / selectedPrice) : 0;
+            
+            // 更新显示
+            document.getElementById('dailyOrdersDisplay').textContent = dailyOrders + ' 单';
+            
             // 有效订单数（扣除退款）- 仅用于利润计算
             const validOrders = dailyOrders * (1 - refundRate);
             
             // 销售收入（扣除退款后的实际收入）
             const salesRevenue = validOrders * selectedPrice;
-            
-            // ROI计算（不扣除退款，反映真实的投入产出比）
-            const grossSales = dailyOrders * selectedPrice;
-            const roi = adSpend > 0 ? (grossSales / adSpend).toFixed(2) : 0;
             
             // 产品成本
             const costProduct = validOrders * productCost;
@@ -571,8 +580,6 @@
             // 显示结果
             document.getElementById('resultSection').classList.remove('hidden');
             
-            document.getElementById('roiValue').textContent = roi;
-            
             const dailyProfitEl = document.getElementById('dailyProfit');
             dailyProfitEl.textContent = formatMoney(dailyProfit);
             dailyProfitEl.className = 'result-value ' + (dailyProfit >= 0 ? 'profit' : 'loss');
@@ -613,6 +620,7 @@
         
         // 页面加载时自动计算一次
         window.onload = function() {
+            updateDailyOrders();
             calculate();
         };
     </script>
