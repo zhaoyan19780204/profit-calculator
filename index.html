@@ -341,16 +341,16 @@
         </div>
         
         <div class="section">
-            <div class="section-title">私域转化参数</div>
+            <div class="section-title">私域转化参数 <span style="font-size:12px;color:#999;font-weight:normal;">（基数：有效单数 = 购买人数 × (1-退款率)）</span></div>
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>加微率（%）</label>
-                    <input type="number" id="wechatRate" value="30" min="0" max="100" step="1">
+                    <label>加微率（%）<span style="font-size:11px;color:#999;display:block;">= 加微信人数 ÷ 有效单数</span></label>
+                    <input type="number" id="wechatRate" value="50" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
-                    <label>进群率（%）</label>
-                    <input type="number" id="groupRate" value="80" min="0" max="100" step="1">
+                    <label>进群率（%）<span style="font-size:11px;color:#999;display:block;">= 进群人数 ÷ 加微信人数</span></label>
+                    <input type="number" id="groupRate" value="62" min="0" max="100" step="1">
                 </div>
             </div>
         </div>
@@ -360,8 +360,8 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>二转转率（%）</label>
-                    <input type="number" id="convert2Rate" value="20" min="0" max="100" step="1">
+                    <label>二转转率（%）<span style="font-size:11px;color:#999;display:block;">= 二转购买人数 ÷ 进群人数</span></label>
+                    <input type="number" id="convert2Rate" value="10" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
                     <label>二转客单价（元）</label>
@@ -370,7 +370,7 @@
             </div>
             
             <div class="form-group">
-                <label>二转分佣（%）</label>
+                <label>二转分佣（%）<span style="font-size:11px;color:#999;display:block;">你能拿到的佣金比例</span></label>
                 <input type="number" id="commission2" value="30" min="0" max="100" step="1">
             </div>
         </div>
@@ -380,18 +380,18 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>三转转率（%）</label>
-                    <input type="number" id="convert3Rate" value="10" min="0" max="100" step="1">
+                    <label>三转转率（%）<span style="font-size:11px;color:#999;display:block;">= 三转购买人数 ÷ 二转购买人数</span></label>
+                    <input type="number" id="convert3Rate" value="20" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
                     <label>三转客单价（元）</label>
-                    <input type="number" id="price3" value="999" min="0" step="1">
+                    <input type="number" id="price3" value="3600" min="0" step="1">
                 </div>
             </div>
             
             <div class="form-group">
-                <label>三转分佣（%）</label>
-                <input type="number" id="commission3" value="20" min="0" max="100" step="1">
+                <label>三转分佣（%）<span style="font-size:11px;color:#999;display:block;">你能拿到的佣金比例</span></label>
+                <input type="number" id="commission3" value="35" min="0" max="100" step="1">
             </div>
         </div>
         
@@ -536,11 +536,11 @@
             // 产品成本
             const costProduct = validOrders * productCost;
             
-            // 二转收入
-            const revenue2 = validOrders * wechatRate * groupRate * convert2Rate * price2 * (1 - commission2);
+            // 二转收入（拿分佣部分）
+            const revenue2 = validOrders * wechatRate * groupRate * convert2Rate * price2 * commission2;
             
-            // 三转收入
-            const revenue3 = validOrders * wechatRate * groupRate * convert2Rate * convert3Rate * price3 * (1 - commission3);
+            // 三转收入（拿分佣部分）
+            const revenue3 = validOrders * wechatRate * groupRate * convert2Rate * convert3Rate * price3 * commission3;
             
             // 主播工资
             const costAnchor = anchorWage * dailyHours;
