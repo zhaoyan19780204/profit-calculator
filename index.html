@@ -514,14 +514,15 @@
             const price3 = getValue('price3');
             const commission3 = getValue('commission3') / 100;
             
-            // 有效订单数（扣除退款）
+            // 有效订单数（扣除退款）- 仅用于利润计算
             const validOrders = dailyOrders * (1 - refundRate);
             
-            // 销售收入
+            // 销售收入（扣除退款后的实际收入）
             const salesRevenue = validOrders * selectedPrice;
             
-            // ROI计算
-            const roi = adSpend > 0 ? (salesRevenue / adSpend).toFixed(2) : 0;
+            // ROI计算（不扣除退款，反映真实的投入产出比）
+            const grossSales = dailyOrders * selectedPrice;
+            const roi = adSpend > 0 ? (grossSales / adSpend).toFixed(2) : 0;
             
             // 产品成本
             const costProduct = validOrders * productCost;
