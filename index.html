@@ -345,18 +345,35 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>抖店扣点（%）</label>
-                    <input type="number" id="douyinFee" value="2" min="0" max="100" step="0.1">
+                    <label>抖店扣费（%）</label>
+                    <input type="number" id="douyinFeeRate" value="2" min="0" max="100" step="0.1" oninput="calculate()">
                 </div>
                 <div class="form-group">
-                    <label>主播扣点（%）</label>
-                    <input type="number" id="anchorFee" value="3" min="0" max="100" step="0.1">
+                    <label>抖店扣费（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
+                    <div id="douyinFeeDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
                 </div>
             </div>
             
-            <div class="form-group">
-                <label>公司缴税（%）</label>
-                <input type="number" id="companyTax" value="1" min="0" max="100" step="0.1">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>主播奖励（%）</label>
+                    <input type="number" id="anchorRewardRate" value="3" min="0" max="100" step="0.1" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>主播奖励（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
+                    <div id="anchorRewardDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>公司缴税（%）</label>
+                    <input type="number" id="companyTaxRate" value="1" min="0" max="100" step="0.1" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>公司缴税（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
+                    <div id="companyTaxDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
+                </div>
             </div>
         </div>
         
@@ -564,11 +581,26 @@
             const price3 = getValue('price3');
             const commission3 = getValue('commission3') / 100;
             
+            // 税务参数
+            const douyinFeeRate = getValue('douyinFeeRate') / 100;
+            const anchorRewardRate = getValue('anchorRewardRate') / 100;
+            const companyTaxRate = getValue('companyTaxRate') / 100;
+            
             // 有效订单数（扣除退款）- 仅用于利润计算
             const validOrders = dailyOrders * (1 - refundRate);
             
             // 销售收入（扣除退款后的实际收入）
             const salesRevenue = validOrders * selectedPrice;
+            
+            // 税务计算（基于销售-退货）
+            const douyinFee = salesRevenue * douyinFeeRate;
+            const anchorReward = salesRevenue * anchorRewardRate;
+            const companyTax = salesRevenue * companyTaxRate;
+            
+            // 更新税务显示
+            document.getElementById('douyinFeeDisplay').textContent = formatMoney(douyinFee);
+            document.getElementById('anchorRewardDisplay').textContent = formatMoney(anchorReward);
+            document.getElementById('companyTaxDisplay').textContent = formatMoney(companyTax);
             
             // 产品成本
             const costProduct = validOrders * productCost;
