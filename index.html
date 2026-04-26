@@ -363,7 +363,7 @@
                 <div class="form-group">
                     <label>主播奖励（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
                     <div id="anchorRewardDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
-                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货) × 奖励比例</span>
+                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货-投流) × 奖励比例</span>
                 </div>
             </div>
             
@@ -607,9 +607,12 @@
             // 销售收入（扣除退款后的实际收入）
             const salesRevenue = validOrders * selectedPrice;
             
-            // 税务计算（基于销售-退货）
+            // 税务计算
+            // 抖店扣费 = (销售-退货) × 扣费比例
             const douyinFee = salesRevenue * douyinFeeRate;
-            const anchorReward = salesRevenue * anchorRewardRate;
+            // 主播奖励 = (销售-退货-投流) × 奖励比例
+            const anchorReward = Math.max(0, salesRevenue - adSpend) * anchorRewardRate;
+            // 公司缴税 = (销售-退货) × 缴税比例
             const companyTax = salesRevenue * companyTaxRate;
             
             // 更新税务显示
