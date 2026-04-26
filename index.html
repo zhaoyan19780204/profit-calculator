@@ -286,20 +286,20 @@
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label>投流金额（元/天）</label>
-                    <input type="number" id="adSpend" value="10000" min="0" step="1" oninput="updateDailyOrders()">
-                </div>
-                <div class="form-group">
-                    <label>ROI</label>
-                    <input type="number" id="roi" value="3" min="0" step="0.1" oninput="updateDailyOrders()">
-                </div>
+            <div class="form-group">
+                <label>每日销售量（单）</label>
+                <input type="number" id="dailyOrders" value="500" min="0" step="1" oninput="updateAdSpend()">
             </div>
             
-            <div class="form-group">
-                <label>每日销售量（单）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">= 投流金额 × ROI ÷ 客单价（自动计算）</span></label>
-                <div id="dailyOrdersDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ROI</label>
+                    <input type="number" id="roi" value="2" min="0.1" step="0.1" oninput="updateAdSpend()">
+                </div>
+                <div class="form-group">
+                    <label>投流金额（元/天）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
+                    <div id="adSpendDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
+                </div>
             </div>
             
             <div class="form-row">
@@ -324,18 +324,18 @@
                 </div>
                 <div class="form-group">
                     <label>每日销售时长（小时）</label>
-                    <input type="number" id="dailyHours" value="4" min="0" step="0.5">
+                    <input type="number" id="dailyHours" value="19" min="0" step="0.5">
                 </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label>房租水电宽带（元/月）</label>
-                    <input type="number" id="rentCost" value="3000" min="0" step="100">
+                    <input type="number" id="rentCost" value="15000" min="0" step="100">
                 </div>
                 <div class="form-group">
                     <label>其他员工费用（元/月）</label>
-                    <input type="number" id="staffCost" value="5000" min="0" step="100">
+                    <input type="number" id="staffCost" value="30000" min="0" step="100">
                 </div>
             </div>
         </div>
@@ -480,14 +480,15 @@
             document.querySelectorAll('.price-option').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             selectedPrice = parseFloat(element.dataset.price);
-            updateDailyOrders();
+            updateAdSpend();
         }
         
-        function updateDailyOrders() {
-            const adSpend = getValue('adSpend');
+        function updateAdSpend() {
+            const dailyOrders = getValue('dailyOrders');
             const roi = getValue('roi');
-            const dailyOrders = selectedPrice > 0 ? Math.round(adSpend * roi / selectedPrice) : 0;
-            document.getElementById('dailyOrdersDisplay').textContent = dailyOrders + ' 单';
+            // 投流金额 = 每日销售量 × 客单价 ÷ ROI
+            const adSpend = roi > 0 ? (dailyOrders * selectedPrice / roi) : 0;
+            document.getElementById('adSpendDisplay').textContent = '¥' + adSpend.toFixed(0);
         }
         
         function getValue(id) {
@@ -504,8 +505,14 @@
         
         function calculate() {
             // 获取所有参数
-            const adSpend = getValue('adSpend');
+            const dailyOrders = getValue('dailyOrders');
             const roiInput = getValue('roi');
+            // 投流金额 = 每日销售量 × 客单价 ÷ ROI
+            const adSpend = roiInput > 0 ? (dailyOrders * selectedPrice / roiInput) : 0;
+            
+            // 更新显示
+            document.getElementById('adSpendDisplay').textContent = '¥' + adSpend.toFixed(0);
+            
             const refundRate = getValue('refundRate') / 100;
             const productCost = getValue('productCost');
             const anchorWage = getValue('anchorWage');
@@ -520,12 +527,6 @@
             const convert3Rate = getValue('convert3Rate') / 100;
             const price3 = getValue('price3');
             const commission3 = getValue('commission3') / 100;
-            
-            // 每日销售单量 = 投流金额 × ROI ÷ 客单价
-            const dailyOrders = selectedPrice > 0 ? Math.round(adSpend * roiInput / selectedPrice) : 0;
-            
-            // 更新显示
-            document.getElementById('dailyOrdersDisplay').textContent = dailyOrders + ' 单';
             
             // 有效订单数（扣除退款）- 仅用于利润计算
             const validOrders = dailyOrders * (1 - refundRate);
@@ -620,7 +621,7 @@
         
         // 页面加载时自动计算一次
         window.onload = function() {
-            updateDailyOrders();
+            updateAdSpend();
             calculate();
         };
     </script>
