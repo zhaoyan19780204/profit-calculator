@@ -467,7 +467,7 @@
             </div>
             
             <div class="analysis-card">
-                <div class="analysis-title">💰 收入构成</div>
+                <div class="analysis-title">💰 收入构成（月）</div>
                 <div class="analysis-item">
                     <span>销售毛收入（不含成本）</span>
                     <span id="salesGrossIncome">-</span>
@@ -689,13 +689,13 @@
             document.getElementById('maxRefundRate').textContent = maxRefundRate.toFixed(1) + '%';
             document.getElementById('minROI').textContent = minROI.toFixed(2);
             
-            // 收入构成
-            // 销售毛收入 = 销售 - 退费 = 有效订单数 × 客单价
-            const salesGrossIncome = salesRevenue;
+            // 收入构成（月）
+            // 销售毛收入 = 销售 - 退费 = 有效订单数 × 客单价 × 30
+            const salesGrossIncome = salesRevenue * 30;
             
             document.getElementById('salesGrossIncome').textContent = formatMoney(salesGrossIncome);
-            document.getElementById('revenue2Display').textContent = formatMoney(revenue2);
-            document.getElementById('revenue3Display').textContent = formatMoney(revenue3);
+            document.getElementById('revenue2Display').textContent = formatMoney(revenue2 * 30);
+            document.getElementById('revenue3Display').textContent = formatMoney(revenue3 * 30);
             
             // 盈利构成（月）
             const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax;
