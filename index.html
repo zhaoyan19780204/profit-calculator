@@ -609,8 +609,8 @@
             document.getElementById('revenue3').textContent = formatMoney(revenue3);
             
             // 盈利构成
-            // 前端销售纯利 = 销售单量*(1-退货率)*客单价 - 投流 - 主播 - 房租 - 员工
-            const frontProfitVal = dailyOrders * (1 - refundRate) * selectedPrice - adSpend - costAnchor - dailyRent - dailyStaff;
+            // 前端销售纯利 = 销售单量*(1-退货率)*客单价 - 销售单量*(1-退货率)*产品成本 - 投流 - 主播 - 房租 - 员工
+            const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff;
             
             document.getElementById('dailyProfitTotal').textContent = formatMoney(dailyProfit);
             document.getElementById('frontProfit').textContent = formatMoney(frontProfitVal);
