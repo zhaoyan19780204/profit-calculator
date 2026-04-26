@@ -351,6 +351,7 @@
                 <div class="form-group">
                     <label>抖店扣费（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
                     <div id="douyinFeeDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
+                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货) × 扣费比例</span>
                 </div>
             </div>
             
@@ -362,6 +363,7 @@
                 <div class="form-group">
                     <label>主播奖励（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
                     <div id="anchorRewardDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
+                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货) × 奖励比例</span>
                 </div>
             </div>
             
@@ -373,6 +375,7 @@
                 <div class="form-group">
                     <label>公司缴税（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
                     <div id="companyTaxDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
+                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货) × 缴税比例</span>
                 </div>
             </div>
         </div>
@@ -531,10 +534,6 @@
                 <div class="analysis-item">
                     <span>员工工资</span>
                     <span id="staffMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>投流成本</span>
-                    <span id="adSpendMonth">-</span>
                 </div>
             </div>
             
@@ -726,7 +725,6 @@
             document.getElementById('anchorWageMonth').textContent = formatWithPercent(costAnchor * 30, totalRevenue);
             document.getElementById('rentMonth').textContent = formatWithPercent(rentCost, totalRevenue);
             document.getElementById('staffMonth').textContent = formatWithPercent(staffCost, totalRevenue);
-            document.getElementById('adSpendMonth').textContent = formatWithPercent(adSpend * 30, totalRevenue);
             
             // 提示信息
             const tipsBox = document.getElementById('tipsBox');
