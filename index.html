@@ -420,12 +420,12 @@
                     <span id="breakevenOrders">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>最大可承受投流金额</span>
-                    <span id="maxAdSpend">-</span>
+                    <span>退款率上限（%）</span>
+                    <span id="maxRefundRate">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>安全边际率</span>
-                    <span id="safetyMargin">-</span>
+                    <span>ROI下限</span>
+                    <span id="minROI">-</span>
                 </div>
             </div>
             
@@ -572,11 +572,26 @@
                 breakevenOrders = Math.ceil((fixedDailyCost + adSpend) / effectiveMargin);
             }
             
-            // 最大可承受投流金额（当前销量下）
-            const maxAdSpend = Math.max(0, salesRevenue - costProduct - fixedDailyCost + revenue2 + revenue3);
+            // 退款率上限（ROI=2时，不亏钱的最大退款率）
+            // 利润 = N×P×(1-r) - N×c×(1-r) - N×P÷2 + 私域收入 - 固定成本 = 0
+            // r = 1 - (N×P÷2 + 固定成本 - 私域收入) / (N×(P-c))
+            let maxRefundRate = 0;
+            const denominator = dailyOrders * (selectedPrice - productCost);
+            if (denominator > 0) {
+                const numerator = dailyOrders * selectedPrice / 2 + fixedDailyCost - (revenue2 + revenue3);
+                maxRefundRate = 1 - numerator / denominator;
+                maxRefundRate = Math.max(0, Math.min(100, maxRefundRate * 100));
+            }
             
-            // 安全边际率
-            const safetyMargin = dailyOrders > 0 ? ((dailyOrders - breakevenOrders) / dailyOrders * 100).toFixed(1) : 0;
+            // ROI下限（退款率=27%时，不亏钱的最小ROI）
+            // 利润 = N×P×0.73 - N×c×0.73 - N×P÷y + 私域收入 - 固定成本 = 0
+            // y = N×P / (N×(P-c)×0.73 + 私域收入 - 固定成本)
+            let minROI = 0;
+            const roiDenominator = dailyOrders * (selectedPrice - productCost) * 0.73 + (revenue2 + revenue3) - fixedDailyCost;
+            if (roiDenominator > 0) {
+                minROI = dailyOrders * selectedPrice / roiDenominator;
+                minROI = Math.max(0, minROI);
+            }
             
             // 显示结果
             document.getElementById('resultSection').classList.remove('hidden');
@@ -590,8 +605,8 @@
             monthlyProfitEl.className = 'result-value ' + (monthlyProfit >= 0 ? 'profit' : 'loss');
             
             document.getElementById('breakevenOrders').textContent = breakevenOrders + ' 单';
-            document.getElementById('maxAdSpend').textContent = formatMoney(maxAdSpend);
-            document.getElementById('safetyMargin').textContent = safetyMargin + '%';
+            document.getElementById('maxRefundRate').textContent = maxRefundRate.toFixed(1) + '%';
+            document.getElementById('minROI').textContent = minROI.toFixed(2);
             
             document.getElementById('salesRevenue').textContent = formatMoney(salesRevenue);
             document.getElementById('revenue2').textContent = formatMoney(revenue2);
@@ -608,9 +623,12 @@
             if (dailyProfit < 0) {
                 tipsBox.classList.remove('hidden');
                 tipsBox.innerHTML = '⚠️ 当前处于亏损状态！建议：降低投流金额、提高转化率或降低成本。';
-            } else if (parseFloat(safetyMargin) < 20) {
+            } else if (refundRate > maxRefundRate / 100) {
                 tipsBox.classList.remove('hidden');
-                tipsBox.innerHTML = '💡 安全边际较低，建议预留更多buffer应对市场波动。';
+                tipsBox.innerHTML = '⚠️ 当前退款率已超过上限！需控制退货率至 ' + maxRefundRate.toFixed(1) + '% 以下。';
+            } else if (roiInput < minROI) {
+                tipsBox.classList.remove('hidden');
+                tipsBox.innerHTML = '⚠️ 当前ROI低于下限！ROI需达到 ' + minROI.toFixed(2) + ' 以上才能盈利。';
             } else {
                 tipsBox.classList.add('hidden');
             }
