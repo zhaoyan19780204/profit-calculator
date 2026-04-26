@@ -446,7 +446,7 @@
             </div>
             
             <div class="analysis-card">
-                <div class="analysis-title">💰 盈利构成</div>
+                <div class="analysis-title">💰 盈利构成（日）</div>
                 <div class="analysis-item">
                     <span>当日利润</span>
                     <span id="dailyProfitTotal">-</span>
@@ -462,6 +462,26 @@
                 <div class="analysis-item">
                     <span>三转利润</span>
                     <span id="thirdProfit">-</span>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <div class="analysis-title">📅 盈利构成（月）</div>
+                <div class="analysis-item">
+                    <span>当月利润</span>
+                    <span id="monthlyProfitTotal">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>前端销售纯利</span>
+                    <span id="frontProfitMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>二转利润</span>
+                    <span id="secondProfitMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>三转利润</span>
+                    <span id="thirdProfitMonth">-</span>
                 </div>
             </div>
             
@@ -616,6 +636,12 @@
             document.getElementById('frontProfit').textContent = formatMoney(frontProfitVal);
             document.getElementById('secondProfit').textContent = formatMoney(revenue2);
             document.getElementById('thirdProfit').textContent = formatMoney(revenue3);
+            
+            // 盈利构成（月）
+            document.getElementById('monthlyProfitTotal').textContent = formatMoney(monthlyProfit);
+            document.getElementById('frontProfitMonth').textContent = formatMoney(frontProfitVal * 30);
+            document.getElementById('secondProfitMonth').textContent = formatMoney(revenue2 * 30);
+            document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
             
             // 提示信息
             const tipsBox = document.getElementById('tipsBox');
