@@ -507,34 +507,34 @@
             </div>
             
             <div class="analysis-card">
-                <div class="analysis-title">📉 成本构成（日）</div>
-                <div class="analysis-item">
-                    <span>产品成本</span>
-                    <span id="costProductDay">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>税务成本</span>
-                    <span id="costTaxDay">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>人力成本</span>
-                    <span id="costHumanDay">-</span>
-                </div>
-            </div>
-            
-            <div class="analysis-card">
                 <div class="analysis-title">📊 成本构成（月）</div>
                 <div class="analysis-item">
                     <span>产品成本</span>
                     <span id="costProductMonth">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>税务成本</span>
-                    <span id="costTaxMonth">-</span>
+                    <span>抖店扣费</span>
+                    <span id="douyinFeeMonth">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>人力成本</span>
-                    <span id="costHumanMonth">-</span>
+                    <span>主播奖励</span>
+                    <span id="anchorRewardMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>公司缴税</span>
+                    <span id="companyTaxMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>主播工资</span>
+                    <span id="anchorWageMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>房租杂费</span>
+                    <span id="rentMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>员工工资</span>
+                    <span id="staffMonth">-</span>
                 </div>
             </div>
             
@@ -712,17 +712,14 @@
             document.getElementById('secondProfitMonth').textContent = formatMoney(revenue2 * 30);
             document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
             
-            // 成本构成
-            const taxCost = douyinFee + anchorReward + companyTax;
-            const humanCost = costAnchor + dailyRent + dailyStaff;
-            
-            document.getElementById('costProductDay').textContent = formatMoney(costProduct);
-            document.getElementById('costTaxDay').textContent = formatMoney(taxCost);
-            document.getElementById('costHumanDay').textContent = formatMoney(humanCost);
-            
+            // 成本构成（月）
             document.getElementById('costProductMonth').textContent = formatMoney(costProduct * 30);
-            document.getElementById('costTaxMonth').textContent = formatMoney(taxCost * 30);
-            document.getElementById('costHumanMonth').textContent = formatMoney(humanCost * 30);
+            document.getElementById('douyinFeeMonth').textContent = formatMoney(douyinFee * 30);
+            document.getElementById('anchorRewardMonth').textContent = formatMoney(anchorReward * 30);
+            document.getElementById('companyTaxMonth').textContent = formatMoney(companyTax * 30);
+            document.getElementById('anchorWageMonth').textContent = formatMoney(costAnchor * 30);
+            document.getElementById('rentMonth').textContent = formatMoney(rentCost);
+            document.getElementById('staffMonth').textContent = formatMoney(staffCost);
             
             // 提示信息
             const tipsBox = document.getElementById('tipsBox');
