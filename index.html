@@ -532,6 +532,10 @@
                     <span>员工工资</span>
                     <span id="staffMonth">-</span>
                 </div>
+                <div class="analysis-item">
+                    <span>投流成本</span>
+                    <span id="adSpendMonth">-</span>
+                </div>
             </div>
             
             <div id="tipsBox" class="tips hidden"></div>
@@ -708,13 +712,21 @@
             document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
             
             // 成本构成（月）
-            document.getElementById('costProductMonth').textContent = formatMoney(costProduct * 30);
-            document.getElementById('douyinFeeMonth').textContent = formatMoney(douyinFee * 30);
-            document.getElementById('anchorRewardMonth').textContent = formatMoney(anchorReward * 30);
-            document.getElementById('companyTaxMonth').textContent = formatMoney(companyTax * 30);
-            document.getElementById('anchorWageMonth').textContent = formatMoney(costAnchor * 30);
-            document.getElementById('rentMonth').textContent = formatMoney(rentCost);
-            document.getElementById('staffMonth').textContent = formatMoney(staffCost);
+            const totalRevenue = salesGrossIncome; // 销售毛收入作为分母
+            
+            function formatWithPercent(value, total) {
+                const percent = total > 0 ? (value / total * 100).toFixed(1) : '0.0';
+                return formatMoney(value) + ' (' + percent + '%)';
+            }
+            
+            document.getElementById('costProductMonth').textContent = formatWithPercent(costProduct * 30, totalRevenue);
+            document.getElementById('douyinFeeMonth').textContent = formatWithPercent(douyinFee * 30, totalRevenue);
+            document.getElementById('anchorRewardMonth').textContent = formatWithPercent(anchorReward * 30, totalRevenue);
+            document.getElementById('companyTaxMonth').textContent = formatWithPercent(companyTax * 30, totalRevenue);
+            document.getElementById('anchorWageMonth').textContent = formatWithPercent(costAnchor * 30, totalRevenue);
+            document.getElementById('rentMonth').textContent = formatWithPercent(rentCost, totalRevenue);
+            document.getElementById('staffMonth').textContent = formatWithPercent(staffCost, totalRevenue);
+            document.getElementById('adSpendMonth').textContent = formatWithPercent(adSpend * 30, totalRevenue);
             
             // 提示信息
             const tipsBox = document.getElementById('tipsBox');
