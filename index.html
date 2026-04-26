@@ -714,7 +714,8 @@
             document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
             
             // 成本构成（月）
-            const totalRevenue = salesGrossIncome; // 销售毛收入作为分母
+            // 分母 = 销售毛收入（月）- 月投流总和
+            const totalRevenue = salesGrossIncome - adSpend * 30;
             
             function formatWithPercent(value, total) {
                 const percent = total > 0 ? (value / total * 100).toFixed(1) : '0.0';
