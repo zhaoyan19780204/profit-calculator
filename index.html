@@ -535,6 +535,10 @@
                     <span>员工工资</span>
                     <span id="staffMonth">-</span>
                 </div>
+                <div class="analysis-item">
+                    <span>老板收入</span>
+                    <span id="bossIncome">-</span>
+                </div>
             </div>
             
             <div id="tipsBox" class="tips hidden"></div>
@@ -729,6 +733,7 @@
             document.getElementById('anchorWageMonth').textContent = formatWithPercent(costAnchor * 30, totalRevenue);
             document.getElementById('rentMonth').textContent = formatWithPercent(rentCost, totalRevenue);
             document.getElementById('staffMonth').textContent = formatWithPercent(staffCost, totalRevenue);
+            document.getElementById('bossIncome').textContent = formatWithPercent(monthlyProfitNew, totalRevenue);
             
             // 提示信息
             const tipsBox = document.getElementById('tipsBox');
