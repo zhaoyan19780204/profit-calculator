@@ -467,22 +467,6 @@
             </div>
             
             <div class="analysis-card">
-                <div class="analysis-title">💰 收入构成</div>
-                <div class="analysis-item">
-                    <span>销售收入（日）</span>
-                    <span id="salesRevenue">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>二转收入（日）</span>
-                    <span id="revenue2">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>三转收入（日）</span>
-                    <span id="revenue3">-</span>
-                </div>
-            </div>
-            
-            <div class="analysis-card">
                 <div class="analysis-title">💰 盈利构成（日）</div>
                 <div class="analysis-item">
                     <span>当日利润</span>
@@ -618,8 +602,8 @@
             const dailyRent = rentCost / 30;
             const dailyStaff = staffCost / 30;
             
-            // 日利润
-            const dailyProfit = salesRevenue - costProduct - adSpend - costAnchor - dailyRent - dailyStaff + revenue2 + revenue3;
+            // 日利润（扣除税务）
+            const dailyProfit = salesRevenue - costProduct - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax + revenue2 + revenue3;
             
             // 月利润
             const monthlyProfit = dailyProfit * 30;
@@ -628,8 +612,11 @@
             // 计算每日固定成本
             const fixedDailyCost = costAnchor + dailyRent + dailyStaff;
             
-            // 单件毛利（不含私域转化）
-            const unitMargin = selectedPrice - productCost;
+            // 税务成本率（每元销售额需扣除的税务）
+            const taxRate = douyinFeeRate + anchorRewardRate + companyTaxRate;
+            
+            // 单件毛利（不含私域转化，扣除税务）
+            const unitMargin = selectedPrice * (1 - taxRate) - productCost;
             
             // 计算保本销量（考虑私域转化的平均贡献）
             const avgPrivateRevenue = (revenue2 + revenue3) / Math.max(validOrders, 1);
@@ -641,10 +628,9 @@
             }
             
             // 退款率上限（ROI=2时，不亏钱的最大退款率）
-            // 利润 = N×P×(1-r) - N×c×(1-r) - N×P÷2 + 私域收入 - 固定成本 = 0
-            // r = 1 - (N×P÷2 + 固定成本 - 私域收入) / (N×(P-c))
+            // 利润 = N×P×(1-r)×(1-税务率) - N×c×(1-r) - N×P÷2 + 私域收入 - 固定成本 = 0
             let maxRefundRate = 0;
-            const denominator = dailyOrders * (selectedPrice - productCost);
+            const denominator = dailyOrders * (selectedPrice * (1 - taxRate) - productCost);
             if (denominator > 0) {
                 const numerator = dailyOrders * selectedPrice / 2 + fixedDailyCost - (revenue2 + revenue3);
                 maxRefundRate = 1 - numerator / denominator;
@@ -652,10 +638,9 @@
             }
             
             // ROI下限（退款率=27%时，不亏钱的最小ROI）
-            // 利润 = N×P×0.73 - N×c×0.73 - N×P÷y + 私域收入 - 固定成本 = 0
-            // y = N×P / (N×(P-c)×0.73 + 私域收入 - 固定成本)
+            // 利润 = N×P×0.73×(1-税务率) - N×c×0.73 - N×P÷y + 私域收入 - 固定成本 = 0
             let minROI = 0;
-            const roiDenominator = dailyOrders * (selectedPrice - productCost) * 0.73 + (revenue2 + revenue3) - fixedDailyCost;
+            const roiDenominator = dailyOrders * (selectedPrice * (1 - taxRate) - productCost) * 0.73 + (revenue2 + revenue3) - fixedDailyCost;
             if (roiDenominator > 0) {
                 minROI = dailyOrders * selectedPrice / roiDenominator;
                 minROI = Math.max(0, minROI);
@@ -676,21 +661,21 @@
             document.getElementById('maxRefundRate').textContent = maxRefundRate.toFixed(1) + '%';
             document.getElementById('minROI').textContent = minROI.toFixed(2);
             
-            document.getElementById('salesRevenue').textContent = formatMoney(salesRevenue);
-            document.getElementById('revenue2').textContent = formatMoney(revenue2);
-            document.getElementById('revenue3').textContent = formatMoney(revenue3);
-            
             // 盈利构成
-            // 前端销售纯利 = 销售单量*(1-退货率)*客单价 - 销售单量*(1-退货率)*产品成本 - 投流 - 主播 - 房租 - 员工
-            const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff;
+            // 前端销售纯利 = 销售单量*(1-退货率)*客单价 - 销售单量*(1-退货率)*产品成本 - 投流 - 主播工资 - 房租 - 员工 - 抖店扣费 - 主播奖励 - 公司缴税
+            const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax;
             
-            document.getElementById('dailyProfitTotal').textContent = formatMoney(dailyProfit);
+            // 日利润 = 前端销售纯利 + 二转利润 + 三转利润
+            const dailyProfitNew = frontProfitVal + revenue2 + revenue3;
+            const monthlyProfitNew = dailyProfitNew * 30;
+            
+            document.getElementById('dailyProfitTotal').textContent = formatMoney(dailyProfitNew);
             document.getElementById('frontProfit').textContent = formatMoney(frontProfitVal);
             document.getElementById('secondProfit').textContent = formatMoney(revenue2);
             document.getElementById('thirdProfit').textContent = formatMoney(revenue3);
             
             // 盈利构成（月）
-            document.getElementById('monthlyProfitTotal').textContent = formatMoney(monthlyProfit);
+            document.getElementById('monthlyProfitTotal').textContent = formatMoney(monthlyProfitNew);
             document.getElementById('frontProfitMonth').textContent = formatMoney(frontProfitVal * 30);
             document.getElementById('secondProfitMonth').textContent = formatMoney(revenue2 * 30);
             document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
