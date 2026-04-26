@@ -446,26 +446,22 @@
             </div>
             
             <div class="analysis-card">
-                <div class="analysis-title">📉 成本构成（日）</div>
+                <div class="analysis-title">💰 盈利构成</div>
                 <div class="analysis-item">
-                    <span>产品成本</span>
-                    <span id="costProduct">-</span>
+                    <span>产品盈利</span>
+                    <span id="productProfit">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>投流成本</span>
-                    <span id="costAd">-</span>
+                    <span>一转利润</span>
+                    <span id="firstProfit">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>主播工资</span>
-                    <span id="costAnchor">-</span>
+                    <span>二转利润</span>
+                    <span id="secondProfit">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>房租水电（日均）</span>
-                    <span id="costRent">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>其他员工（日均）</span>
-                    <span id="costStaff">-</span>
+                    <span>三转利润</span>
+                    <span id="thirdProfit">-</span>
                 </div>
             </div>
             
@@ -612,11 +608,14 @@
             document.getElementById('revenue2').textContent = formatMoney(revenue2);
             document.getElementById('revenue3').textContent = formatMoney(revenue3);
             
-            document.getElementById('costProduct').textContent = formatMoney(costProduct);
-            document.getElementById('costAd').textContent = formatMoney(adSpend);
-            document.getElementById('costAnchor').textContent = formatMoney(costAnchor);
-            document.getElementById('costRent').textContent = formatMoney(dailyRent);
-            document.getElementById('costStaff').textContent = formatMoney(dailyStaff);
+            // 盈利构成
+            const productProfitVal = salesRevenue - costProduct;
+            const firstProfitVal = productProfitVal - adSpend - costAnchor - dailyRent - dailyStaff;
+            
+            document.getElementById('productProfit').textContent = formatMoney(productProfitVal);
+            document.getElementById('firstProfit').textContent = formatMoney(firstProfitVal);
+            document.getElementById('secondProfit').textContent = formatMoney(revenue2);
+            document.getElementById('thirdProfit').textContent = formatMoney(revenue3);
             
             // 提示信息
             const tipsBox = document.getElementById('tipsBox');
