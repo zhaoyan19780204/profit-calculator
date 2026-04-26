@@ -467,22 +467,18 @@
             </div>
             
             <div class="analysis-card">
-                <div class="analysis-title">💰 盈利构成（日）</div>
+                <div class="analysis-title">💰 收入构成</div>
                 <div class="analysis-item">
-                    <span>当日利润</span>
-                    <span id="dailyProfitTotal">-</span>
+                    <span>销售毛收入（不含成本）</span>
+                    <span id="salesGrossIncome">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>前端销售纯利</span>
-                    <span id="frontProfit">-</span>
+                    <span>二转收入</span>
+                    <span id="revenue2Display">-</span>
                 </div>
                 <div class="analysis-item">
-                    <span>二转利润</span>
-                    <span id="secondProfit">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>三转利润</span>
-                    <span id="thirdProfit">-</span>
+                    <span>三转收入</span>
+                    <span id="revenue3Display">-</span>
                 </div>
             </div>
             
@@ -693,20 +689,19 @@
             document.getElementById('maxRefundRate').textContent = maxRefundRate.toFixed(1) + '%';
             document.getElementById('minROI').textContent = minROI.toFixed(2);
             
-            // 盈利构成
-            // 前端销售纯利 = 销售单量*(1-退货率)*客单价 - 销售单量*(1-退货率)*产品成本 - 投流 - 主播工资 - 房租 - 员工 - 抖店扣费 - 主播奖励 - 公司缴税
-            const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax;
+            // 收入构成
+            // 销售毛收入 = 销售 - 退费 = 有效订单数 × 客单价
+            const salesGrossIncome = salesRevenue;
             
-            // 日利润 = 前端销售纯利 + 二转利润 + 三转利润
+            document.getElementById('salesGrossIncome').textContent = formatMoney(salesGrossIncome);
+            document.getElementById('revenue2Display').textContent = formatMoney(revenue2);
+            document.getElementById('revenue3Display').textContent = formatMoney(revenue3);
+            
+            // 盈利构成（月）
+            const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax;
             const dailyProfitNew = frontProfitVal + revenue2 + revenue3;
             const monthlyProfitNew = dailyProfitNew * 30;
             
-            document.getElementById('dailyProfitTotal').textContent = formatMoney(dailyProfitNew);
-            document.getElementById('frontProfit').textContent = formatMoney(frontProfitVal);
-            document.getElementById('secondProfit').textContent = formatMoney(revenue2);
-            document.getElementById('thirdProfit').textContent = formatMoney(revenue3);
-            
-            // 盈利构成（月）
             document.getElementById('monthlyProfitTotal').textContent = formatMoney(monthlyProfitNew);
             document.getElementById('frontProfitMonth').textContent = formatMoney(frontProfitVal * 30);
             document.getElementById('secondProfitMonth').textContent = formatMoney(revenue2 * 30);
