@@ -506,6 +506,38 @@
                 </div>
             </div>
             
+            <div class="analysis-card">
+                <div class="analysis-title">📉 成本构成（日）</div>
+                <div class="analysis-item">
+                    <span>产品成本</span>
+                    <span id="costProductDay">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>税务成本</span>
+                    <span id="costTaxDay">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>人力成本</span>
+                    <span id="costHumanDay">-</span>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <div class="analysis-title">📊 成本构成（月）</div>
+                <div class="analysis-item">
+                    <span>产品成本</span>
+                    <span id="costProductMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>税务成本</span>
+                    <span id="costTaxMonth">-</span>
+                </div>
+                <div class="analysis-item">
+                    <span>人力成本</span>
+                    <span id="costHumanMonth">-</span>
+                </div>
+            </div>
+            
             <div id="tipsBox" class="tips hidden"></div>
         </div>
     </div>
@@ -679,6 +711,18 @@
             document.getElementById('frontProfitMonth').textContent = formatMoney(frontProfitVal * 30);
             document.getElementById('secondProfitMonth').textContent = formatMoney(revenue2 * 30);
             document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
+            
+            // 成本构成
+            const taxCost = douyinFee + anchorReward + companyTax;
+            const humanCost = costAnchor + dailyRent + dailyStaff;
+            
+            document.getElementById('costProductDay').textContent = formatMoney(costProduct);
+            document.getElementById('costTaxDay').textContent = formatMoney(taxCost);
+            document.getElementById('costHumanDay').textContent = formatMoney(humanCost);
+            
+            document.getElementById('costProductMonth').textContent = formatMoney(costProduct * 30);
+            document.getElementById('costTaxMonth').textContent = formatMoney(taxCost * 30);
+            document.getElementById('costHumanMonth').textContent = formatMoney(humanCost * 30);
             
             // 提示信息
             const tipsBox = document.getElementById('tipsBox');
