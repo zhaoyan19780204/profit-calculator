@@ -1804,16 +1804,25 @@
             overviewChart = echarts.init(container);
             
             const refundOrders = parsedOrders.filter(o => o.isRefund).length;
+            const validOrders = parsedOrders.length - refundOrders;
+            const refundRate = parsedOrders.length > 0 ? (refundOrders / parsedOrders.length * 100).toFixed(1) : 0;
+            const validRate = parsedOrders.length > 0 ? (validOrders / parsedOrders.length * 100).toFixed(1) : 0;
             overviewChart.setOption({
-                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
                 legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#666' } },
                 series: [{
                     type: 'pie', radius: ['40%', '70%'], center: ['35%', '50%'],
-                    label: { show: false },
-                    emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                    label: {
+                        show: true,
+                        formatter: '{b}\n{c}单 ({d}%)',
+                        fontSize: 13,
+                        fontWeight: 'bold',
+                        lineHeight: 20
+                    },
+                    labelLine: { show: true, length: 15, length2: 10 },
                     data: [
-                        { value: parsedOrders.length - refundOrders, name: '有效订单', itemStyle: { color: '#10b981' } },
-                        { value: refundOrders, name: '退款订单', itemStyle: { color: '#ef4444' } }
+                        { value: validOrders, name: '有效订单', itemStyle: { color: '#10b981' }, label: { color: '#10b981' } },
+                        { value: refundOrders, name: '退款订单', itemStyle: { color: '#ef4444' }, label: { color: '#ef4444' } }
                     ]
                 }]
             });
@@ -1835,11 +1844,17 @@
                 legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#666' } },
                 series: [{
                     type: 'pie', radius: ['40%', '70%'], center: ['35%', '50%'],
-                    label: { show: false },
-                    emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                    label: {
+                        show: true,
+                        formatter: '{b}\n¥{c} ({d}%)',
+                        fontSize: 13,
+                        fontWeight: 'bold',
+                        lineHeight: 20
+                    },
+                    labelLine: { show: true, length: 15, length2: 10 },
                     data: [
-                        { value: validSales.toFixed(2), name: '有效收入', itemStyle: { color: '#10b981' } },
-                        { value: refundAmount.toFixed(2), name: '退款金额', itemStyle: { color: '#ef4444' } }
+                        { value: validSales.toFixed(2), name: '有效收入', itemStyle: { color: '#10b981' }, label: { color: '#10b981' } },
+                        { value: refundAmount.toFixed(2), name: '退款金额', itemStyle: { color: '#ef4444' }, label: { color: '#ef4444' } }
                     ]
                 }]
             });
@@ -1894,7 +1909,7 @@
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: hours, axisLabel: { color: '#666', interval: 2 } },
                 yAxis: [
-                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
+                    { type: 'value', name: '退款率%', max: 55, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
                     { 
@@ -1903,6 +1918,13 @@
                         data: refundRates, 
                         itemStyle: { color: '#667eea' }, 
                         smooth: true,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%',
+                            fontSize: 9,
+                            color: '#333'
+                        },
                         areaStyle: {
                             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                                 { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
@@ -2063,7 +2085,7 @@
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: weekdays, axisLabel: { color: '#666' } },
                 yAxis: [
-                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
+                    { type: 'value', name: '退款率%', max: 55, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
                     { 
@@ -2190,7 +2212,7 @@
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: dates, axisLabel: { color: '#666', rotate: 45 } },
                 yAxis: [
-                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
+                    { type: 'value', name: '退款率%', max: 55, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
                     { 
@@ -2323,6 +2345,30 @@
             const refundRates = anchors.map(a => anchorData[a].total > 0 ? (anchorData[a].refund / anchorData[a].total * 100).toFixed(1) : 0);
             const refundCounts = anchors.map(a => anchorData[a].refund);
             
+            // 主播颜色映射
+            const anchorColors = {
+                '宋粉粉': '#f472b6',
+                '马静': '#a78bfa',
+                '陈璐': '#60a5fa',
+                '吴沥菊': '#34d399',
+                '非直播时段': '#9ca3af'
+            };
+            
+            // 为每个主播设置颜色和退款率标签
+            const barData = refundRates.map((rate, idx) => ({
+                value: rate,
+                itemStyle: {
+                    color: anchorColors[anchors[idx]] || '#667eea'
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) { return params.value + '%'; },
+                    fontSize: 11,
+                    fontWeight: 'bold'
+                }
+            }));
+            
             anchorChart.setOption({
                 tooltip: { 
                     trigger: 'axis', 
@@ -2342,18 +2388,13 @@
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: anchors, axisLabel: { color: '#666' } },
                 yAxis: [
-                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
+                    { type: 'value', name: '退款率%', max: 60, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
                     { 
                         name: '退款率', 
                         type: 'bar', 
-                        data: refundRates,
-                        itemStyle: { 
-                            color: function(p) {
-                                return parseFloat(p.value) >= LIFELINE_RATE ? '#ef4444' : '#667eea';
-                            }
-                        },
+                        data: barData,
                         markLine: {
                             symbol: 'none',
                             data: [{ yAxis: LIFELINE_RATE, name: '生命线(26%)' }],
@@ -2656,7 +2697,7 @@
                 },
                 yAxis: [
                     { type: 'value', name: '退款数', axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
-                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
+                    { type: 'value', name: '退款率%', max: 55, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
                     { 
