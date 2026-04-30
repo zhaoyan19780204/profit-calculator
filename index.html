@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>直播带货盈利计算器</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
@@ -19,8 +19,9 @@
         }
         /* 确保所有元素不超过容器宽度 */
         .container, .container * {
-            max-width: 100%;
-            overflow-x: hidden;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
         }
         .container {
             max-width: 600px;
@@ -419,8 +420,9 @@
         
         /* ============ 手机适配 (640px以下) ============ */
         @media (max-width: 640px) {
-            body { padding: 8px; }
-            .container { border-radius: 12px; width: 100%; max-width: 100%; }
+            body { padding: 8px; overflow-x: hidden !important; max-width: 100vw !important; }
+            .container { border-radius: 12px; width: 100% !important; max-width: 100% !important; overflow: hidden !important; }
+            .container > * { max-width: 100% !important; overflow-x: hidden !important; box-sizing: border-box !important; }
             .header { padding: 16px 12px; }
             .header h1 { font-size: 18px; }
             .header p { font-size: 12px; }
@@ -1460,14 +1462,17 @@
                             jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
                         }
                         
+                        console.log('[文件解析]', file.name, '行数:', jsonData ? jsonData.length : 0, '列数:', jsonData && jsonData[0] ? Object.keys(jsonData[0]).length : 0);
                         if (jsonData && jsonData.length > 0) {
                             // 记录每个文件的数据（单独保存，后续单独解析）
                             allFileJsonData.push({ name: file.name, data: jsonData });
                             allJsonData = allJsonData.concat(jsonData);
                             allFileInfos.push({ name: file.name, count: jsonData.length });
+                        } else {
+                            console.warn('[文件解析]', file.name, '解析结果为空');
                         }
                     } catch (error) {
-                        console.error('解析文件失败:', error);
+                        console.error('[解析文件失败]', file.name, error);
                         alert('解析文件失败: ' + (error.message || error) + '\n\n请确认文件格式正确，未被加密或保护。\n文件: ' + file.name);
                     }
                     
@@ -1490,9 +1495,20 @@
                 // 每个文件单独解析再合并（避免不同列名的文件合并后字段匹配失败）
                 orderData = allJsonData;
                 uploadedFiles = allFileInfos;
-                // 先按文件分组解析，再合并parsedOrders
-                const perFileOrders = allFileJsonData.map(fd => parseOrderData(fd.data));
-                parsedOrders = perFileOrders.reduce((acc, arr) => acc.concat(arr), []);
+                console.log('[合并数据] 文件数:', allFileJsonData.length, 'allJsonData总行数:', allJsonData.length);
+                allFileJsonData.forEach(fd => {
+                    console.log('[合并数据]', fd.name, ':', fd.data.length, '行, 列名:', fd.data[0] ? Object.keys(fd.data[0]).slice(0, 5).join(',') : 'N/A');
+                });
+                // 先按文件分组解析，再合并parsedOrders（保留之前已解析的订单）
+                let previousOrders = parsedOrders || [];
+                const perFileOrders = allFileJsonData.map(fd => {
+                    const orders = parseOrderData(fd.data);
+                    console.log('[合并数据]', fd.name, '解析后有效订单:', orders.length);
+                    return orders;
+                });
+                const newOrders = perFileOrders.reduce((acc, arr) => acc.concat(arr), []);
+                parsedOrders = previousOrders.concat(newOrders);
+                console.log('[合并数据] 之前订单:', previousOrders.length, '新增订单:', newOrders.length, '最终总数:', parsedOrders.length);
                 
                 // 显示已上传文件信息
                 document.getElementById('orderFileInfo').innerHTML = uploadedFiles.map(f => 
