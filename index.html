@@ -1727,7 +1727,7 @@
                 if (!isRefund && statusField && afterSaleField) {
                     const statusStr = String(row[statusField] || '').replace(/\t/g, '').trim();
                     const afterSaleStr = String(row[afterSaleField] || '').replace(/\t/g, '').trim();
-                    if (/已关闭/i.test(statusStr) && afterSaleStr && afterSaleStr !== '-') isRefund = true;
+                    if (/已关闭/i.test(statusStr) && afterSaleStr && afterSaleStr !== '-' && !/售后关闭/.test(afterSaleStr)) isRefund = true;
                 }
                 
                 // 解析时间
