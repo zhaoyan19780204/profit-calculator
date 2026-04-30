@@ -1726,6 +1726,9 @@
                 
                 const dateStr = time && !isNaN(time.getTime()) ? time.toISOString().split('T')[0] : null;
                 
+                // 只纳入已支付订单（有支付时间的才算有效订单，未付款的不算）
+                if (!time || isNaN(time.getTime())) return null;
+                
                 return { 
                     orderNo: row[orderNoField], 
                     amount, 
@@ -1737,7 +1740,7 @@
                     channel: channel,
                     raw: row 
                 };
-            });
+            }).filter(o => o !== null);
         }
         
         function matchAnchor(time, dateStr) {
