@@ -136,6 +136,16 @@
         
         /* ============ 数据分析样式 ============ */
         .analysis-section { background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); width: 100%; overflow-x: hidden; }
+        /* 日期范围选择器 */
+        .date-range-selector { margin-top: 10px; padding: 12px; background: #f0f4ff; border-radius: 10px; }
+        .date-range-label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px; }
+        .date-range-inputs { display: flex; align-items: center; gap: 8px; }
+        .date-input { flex: 1; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; color: #333; background: white; outline: none; }
+        .date-input:focus { border-color: #667eea; }
+        .date-sep { color: #888; font-size: 13px; flex-shrink: 0; }
+        .date-reset-btn { margin-top: 8px; padding: 6px 14px; font-size: 12px; color: #667eea; background: white; border: 1px solid #667eea; border-radius: 6px; cursor: pointer; }
+        .date-reset-btn:hover { background: #667eea; color: white; }
+        
         .upload-area {
             border: 2px dashed #d1d5db;
             border-radius: 10px;
@@ -482,6 +492,11 @@
             .wheel-item.selected { font-size: 18px; }
             .wheel-mask { height: 40px; }
             
+            /* 日期选择器 */
+            .date-range-selector { padding: 10px; }
+            .date-input { font-size: 13px; padding: 7px 8px; }
+            .date-range-inputs { gap: 6px; }
+            
             /* 上传区域 */
             .upload-area { padding: 16px 10px; }
             .upload-icon { font-size: 36px; }
@@ -775,6 +790,16 @@
             </div>
             <div id="orderFileInfo" class="uploaded-files"></div>
             <button id="clearDataBtn" class="add-anchor-btn hidden" onclick="clearAllData()" style="margin-top:8px;padding:10px;">🗑️ 清空数据</button>
+            
+            <div id="dateRangeSelector" class="date-range-selector hidden">
+                <div class="date-range-label">📅 数据时间范围</div>
+                <div class="date-range-inputs">
+                    <input type="date" id="dateFrom" class="date-input" onchange="onDateRangeChange()">
+                    <span class="date-sep">至</span>
+                    <input type="date" id="dateTo" class="date-input" onchange="onDateRangeChange()">
+                </div>
+                <button class="date-reset-btn" onclick="resetDateRange()">重置为全部</button>
+            </div>
             
             <div id="dataStatus" class="empty-state">
                 <div class="icon">📈</div>
@@ -1334,6 +1359,7 @@
         // ==================== 数据分析功能 ====================
         let orderData = null;
         let parsedOrders = [];
+        let filteredOrders = []; // 日期筛选后的订单
         let uploadedFiles = [];
         let hasRefundTimeField = false; // 标记是否有退款时间字段
         
@@ -1528,11 +1554,15 @@
             
             orderData = null;
             parsedOrders = [];
+            filteredOrders = [];
             uploadedFiles = [];
             hasRefundTimeField = false;
             
             document.getElementById('orderFileInfo').innerHTML = '';
             document.getElementById('clearDataBtn').classList.add('hidden');
+            document.getElementById('dateRangeSelector').classList.add('hidden');
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
             document.getElementById('orderFileInput').value = '';
             
             resetAnalysis();
@@ -1846,28 +1876,71 @@
         
         function hideLoading() { document.getElementById('loadingStatus').classList.add('hidden'); }
         
+        function applyDateFilter() {
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+            if (from || to) {
+                filteredOrders = parsedOrders.filter(o => {
+                    if (!o.date) return false;
+                    if (from && o.date < from) return false;
+                    if (to && o.date > to) return false;
+                    return true;
+                });
+            } else {
+                filteredOrders = [...parsedOrders];
+            }
+        }
+        
+        function onDateRangeChange() {
+            applyDateFilter();
+            renderAnalysis();
+        }
+        
+        function resetDateRange() {
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            filteredOrders = [...parsedOrders];
+            renderAnalysis();
+        }
+        
         function analyzeData() {
             hideLoading();
             if (parsedOrders.length === 0) { resetAnalysis(); return; }
             
-            parsedOrders.forEach(order => { 
+            // 设置日期范围默认值
+            const dates = parsedOrders.filter(o => o.date).map(o => o.date).sort();
+            const dateSelector = document.getElementById('dateRangeSelector');
+            if (dates.length > 0) {
+                document.getElementById('dateFrom').value = dates[0];
+                document.getElementById('dateTo').value = dates[dates.length - 1];
+                dateSelector.classList.remove('hidden');
+            }
+            
+            filteredOrders = [...parsedOrders];
+            renderAnalysis();
+        }
+        
+        function renderAnalysis() {
+            if (filteredOrders.length === 0) { resetAnalysis(); return; }
+            
+            filteredOrders.forEach(order => { 
                 order.anchor = matchAnchor(order.time, order.date); 
             });
             
             // ============ 退款分析数据 ============
-            const totalOrders = parsedOrders.length;
-            const refundOrders = parsedOrders.filter(o => o.isRefund).length;
+            const totalOrders = filteredOrders.length;
+            const refundOrders = filteredOrders.filter(o => o.isRefund).length;
             const refundRate = totalOrders > 0 ? (refundOrders / totalOrders * 100) : 0;
             
             // 上月退款率
             const lastMonthRange = getLastMonthRange();
-            const lastMonthOrders = parsedOrders.filter(o => o.date && o.date >= lastMonthRange.start && o.date <= lastMonthRange.end);
+            const lastMonthOrders = filteredOrders.filter(o => o.date && o.date >= lastMonthRange.start && o.date <= lastMonthRange.end);
             const lastMonthRefundOrders = lastMonthOrders.filter(o => o.isRefund).length;
             const lastMonthRefundRate = lastMonthOrders.length > 0 ? (lastMonthRefundOrders / lastMonthOrders.length * 100) : 0;
             
             // 上周退款率
             const lastWeekRange = getLastWeekRange();
-            const lastWeekOrders = parsedOrders.filter(o => o.date && o.date >= lastWeekRange.start && o.date <= lastWeekRange.end);
+            const lastWeekOrders = filteredOrders.filter(o => o.date && o.date >= lastWeekRange.start && o.date <= lastWeekRange.end);
             const lastWeekRefundOrders = lastWeekOrders.filter(o => o.isRefund).length;
             const lastWeekRefundRate = lastWeekOrders.length > 0 ? (lastWeekRefundOrders / lastWeekOrders.length * 100) : 0;
             
@@ -1877,15 +1950,15 @@
             document.getElementById('lastWeekRefundRate').textContent = lastWeekOrders.length > 0 ? lastWeekRefundRate.toFixed(1) + '%' : '-';
             
             // ============ 销售分析数据 ============
-            const totalSalesCount = parsedOrders.length;
+            const totalSalesCount = filteredOrders.length;
             
             // 本周销售单数
             const thisWeekRange = getThisWeekRange();
-            const weekSalesCount = parsedOrders.filter(o => o.date && o.date >= thisWeekRange.start && o.date <= thisWeekRange.end).length;
+            const weekSalesCount = filteredOrders.filter(o => o.date && o.date >= thisWeekRange.start && o.date <= thisWeekRange.end).length;
             
             // 本月销售单数
             const thisMonthRange = getThisMonthRange();
-            const monthSalesCount = parsedOrders.filter(o => o.date && o.date >= thisMonthRange.start && o.date <= thisMonthRange.end).length;
+            const monthSalesCount = filteredOrders.filter(o => o.date && o.date >= thisMonthRange.start && o.date <= thisMonthRange.end).length;
             
             // 上月销售单数
             const lastMonthSalesCount = lastMonthOrders.length;
@@ -1997,8 +2070,8 @@
             if (overviewChart) overviewChart.dispose();
             overviewChart = echarts.init(container);
             
-            const refundOrders = parsedOrders.filter(o => o.isRefund).length;
-            const validOrders = parsedOrders.length - refundOrders;
+            const refundOrders = filteredOrders.filter(o => o.isRefund).length;
+            const validOrders = filteredOrders.length - refundOrders;
             
             overviewChart.setOption({
                 tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
@@ -2031,8 +2104,8 @@
             salesOverviewChart = echarts.init(container);
             
             // 按单数计算，不是按金额
-            const totalOrders = parsedOrders.length;
-            const refundOrders = parsedOrders.filter(o => o.isRefund).length;
+            const totalOrders = filteredOrders.length;
+            const refundOrders = filteredOrders.filter(o => o.isRefund).length;
             const validOrders = totalOrders - refundOrders;
             
             salesOverviewChart.setOption({
@@ -2067,7 +2140,7 @@
             const hourlyData = {};
             for (let i = 0; i < 24; i++) hourlyData[i] = { total: 0, refund: 0 };
             
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (order.time && !isNaN(order.time.getTime())) {
                     const hour = order.time.getHours();
                     hourlyData[hour].total++;
@@ -2156,10 +2229,10 @@
             
             // 计算数据覆盖天数
             const allDates = new Set();
-            parsedOrders.forEach(order => { if (order.date) allDates.add(order.date); });
+            filteredOrders.forEach(order => { if (order.date) allDates.add(order.date); });
             const dayCount = allDates.size || 1;
             
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (order.time && !isNaN(order.time.getTime())) {
                     const hour = order.time.getHours();
                     hourlyData[hour].total++;
@@ -2249,7 +2322,7 @@
             const weekdayJsIndex = [1, 2, 3, 4, 5, 6, 0];
             const weekdayData = weekdays.map(() => ({ total: 0, refund: 0 }));
             
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (order.time && !isNaN(order.time.getTime())) {
                     const jsDay = order.time.getDay();
                     const idx = weekdayJsIndex.indexOf(jsDay);
@@ -2319,7 +2392,7 @@
             
             // 计算每个星期几覆盖的周数
             const weekdayWeekSets = weekdays.map(() => new Set());
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (order.time && !isNaN(order.time.getTime()) && order.date) {
                     const jsDay = order.time.getDay();
                     const idx = weekdayJsIndex.indexOf(jsDay);
@@ -2411,7 +2484,7 @@
             dailyChart = echarts.init(container);
             
             const dailyData = {};
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (order.date) {
                     if (!dailyData[order.date]) dailyData[order.date] = { total: 0, refund: 0 };
                     dailyData[order.date].total++;
@@ -2485,7 +2558,7 @@
             dailySalesChart = echarts.init(container);
             
             const dailyData = {};
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (order.date) {
                     if (!dailyData[order.date]) dailyData[order.date] = { total: 0, refund: 0 };
                     dailyData[order.date].total++;
@@ -2561,7 +2634,7 @@
             anchorChart = echarts.init(container);
             
             const anchorData = {};
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 const name = order.anchor || '非直播时段';
                 if (!anchorData[name]) anchorData[name] = { total: 0, refund: 0 };
                 anchorData[name].total++;
@@ -2647,7 +2720,7 @@
             anchorSalesChart = echarts.init(container);
             
             const anchorData = {};
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 const name = order.anchor || '非直播时段';
                 if (!anchorData[name]) anchorData[name] = { total: 0, refund: 0 };
                 anchorData[name].total++;
@@ -2766,14 +2839,14 @@
             
             // 统计渠道数据
             const channelData = {};
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 const channel = order.channel || '其他渠道';
                 if (!channelData[channel]) channelData[channel] = { total: 0, refund: 0 };
                 channelData[channel].total++;
                 if (order.isRefund) channelData[channel].refund++;
             });
             
-            const totalCount = parsedOrders.length;
+            const totalCount = filteredOrders.length;
             
             // 生成表格
             if (tableContainer) {
@@ -2868,7 +2941,7 @@
             
             // 按支付日期分组
             const dailyOrders = {};
-            parsedOrders.forEach(order => {
+            filteredOrders.forEach(order => {
                 if (!order.date) return;
                 if (!dailyOrders[order.date]) {
                     dailyOrders[order.date] = [];
