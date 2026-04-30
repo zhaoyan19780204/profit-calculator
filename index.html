@@ -587,12 +587,12 @@
             </div>
             
             <div id="analysisTabs" class="tab-buttons hidden">
-                <button class="tab-btn active" onclick="switchTab('overview')">退款总览</button>
-                <button class="tab-btn" onclick="switchTab('hourly')">时段分析</button>
-                <button class="tab-btn" onclick="switchTab('weekday')">星期分析</button>
-                <button class="tab-btn" onclick="switchTab('daily')">日趋势</button>
-                <button class="tab-btn" onclick="switchTab('anchor')">主播分析</button>
-                <button class="tab-btn" onclick="switchTab('refundCurve')">7天退款</button>
+                <button class="tab-btn active" onclick="switchTab('overview', event)">退款总览</button>
+                <button class="tab-btn" onclick="switchTab('hourly', event)">时段分析</button>
+                <button class="tab-btn" onclick="switchTab('weekday', event)">星期分析</button>
+                <button class="tab-btn" onclick="switchTab('daily', event)">日趋势</button>
+                <button class="tab-btn" onclick="switchTab('anchor', event)">主播分析</button>
+                <button class="tab-btn" onclick="switchTab('refundCurve', event)">7天退款</button>
             </div>
             
             <div id="chartArea" class="hidden">
@@ -1368,9 +1368,15 @@
             switchTab('overview');
         }
         
-        function switchTab(tab) {
+        function switchTab(tab, evt) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            } else {
+                const tabBtns = document.querySelectorAll('.tab-btn');
+                const tabMap = { overview: 0, hourly: 1, weekday: 2, daily: 3, anchor: 4, refundCurve: 5 };
+                if (tabBtns[tabMap[tab]]) tabBtns[tabMap[tab]].classList.add('active');
+            }
             
             ['overviewChart', 'hourlyChart', 'weekdayChart', 'dailyChart', 'anchorChart', 'refundCurveChart'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
