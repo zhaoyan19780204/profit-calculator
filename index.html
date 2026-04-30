@@ -7,19 +7,13 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 16px;
         }
-        
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -28,34 +22,16 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
         }
-        
         .header {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             padding: 24px 20px;
             text-align: center;
         }
-        
-        .header h1 {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .section {
-            padding: 20px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .section:last-child {
-            border-bottom: none;
-        }
-        
+        .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .section { padding: 20px; border-bottom: 1px solid #f0f0f0; }
+        .section:last-child { border-bottom: none; }
         .section-title {
             font-size: 16px;
             font-weight: 600;
@@ -65,7 +41,6 @@
             align-items: center;
             gap: 8px;
         }
-        
         .section-title::before {
             content: '';
             width: 4px;
@@ -73,18 +48,8 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 2px;
         }
-        
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 6px;
-        }
-        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 14px; color: #666; margin-bottom: 6px; }
         .form-group input, .form-group select {
             width: 100%;
             padding: 12px;
@@ -93,25 +58,13 @@
             font-size: 16px;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-        
         .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        
-        .price-selector {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .price-selector { display: flex; gap: 12px; margin-bottom: 16px; }
         .price-option {
             flex: 1;
             padding: 12px;
@@ -121,23 +74,9 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
-        .price-option.active {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-        }
-        
-        .price-option .price {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .price-option .unit {
-            font-size: 12px;
-            color: #999;
-        }
-        
+        .price-option.active { border-color: #667eea; background: rgba(102, 126, 234, 0.1); }
+        .price-option .price { font-size: 24px; font-weight: 600; color: #333; }
+        .price-option .unit { font-size: 12px; color: #999; }
         .result-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
@@ -145,7 +84,6 @@
             color: white;
             margin-bottom: 16px;
         }
-        
         .result-row {
             display: flex;
             justify-content: space-between;
@@ -153,70 +91,15 @@
             padding: 12px 0;
             border-bottom: 1px solid rgba(255,255,255,0.2);
         }
-        
-        .result-row:last-child {
-            border-bottom: none;
-        }
-        
-        .result-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .result-value {
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .result-value.profit {
-            color: #4ade80;
-        }
-        
-        .result-value.loss {
-            color: #f87171;
-        }
-        
-        .analysis-card {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-        
-        .analysis-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 12px;
-        }
-        
-        .analysis-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .analysis-item span:last-child {
-            font-weight: 500;
-            color: #333;
-        }
-        
-        .roi-display {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.2);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-        
-        .roi-value {
-            font-weight: 600;
-        }
-        
+        .result-row:last-child { border-bottom: none; }
+        .result-label { font-size: 14px; opacity: 0.9; }
+        .result-value { font-size: 20px; font-weight: 600; }
+        .result-value.profit { color: #4ade80; }
+        .result-value.loss { color: #f87171; }
+        .analysis-card { background: #f8fafc; border-radius: 12px; padding: 16px; margin-top: 16px; }
+        .analysis-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px; }
+        .analysis-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; color: #666; }
+        .analysis-item span:last-child { font-weight: 500; color: #333; }
         .tips {
             background: #fffbeb;
             border-left: 3px solid #f59e0b;
@@ -226,7 +109,6 @@
             font-size: 13px;
             color: #92400e;
         }
-        
         .calculate-btn {
             width: 100%;
             padding: 16px;
@@ -239,25 +121,11 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
+        .calculate-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+        .hidden { display: none; }
         
-        .calculate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .calculate-btn:active {
-            transform: translateY(0);
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        /* ============ 数据分析板块样式 ============ */
-        .analysis-section {
-            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-        }
-        
+        /* ============ 数据分析样式 ============ */
+        .analysis-section { background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); }
         .upload-area {
             border: 2px dashed #d1d5db;
             border-radius: 12px;
@@ -267,45 +135,13 @@
             cursor: pointer;
             margin-bottom: 16px;
         }
-        
-        .upload-area:hover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.05);
-        }
-        
-        .upload-area.dragover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-        }
-        
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-        
-        .upload-text {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .upload-text strong {
-            color: #667eea;
-        }
-        
-        .upload-hint {
-            font-size: 12px;
-            color: #999;
-            margin-top: 8px;
-        }
-        
-        .file-input {
-            display: none;
-        }
-        
-        .uploaded-files {
-            margin-top: 12px;
-        }
-        
+        .upload-area:hover { border-color: #667eea; background: rgba(102, 126, 234, 0.05); }
+        .upload-icon { font-size: 48px; margin-bottom: 12px; }
+        .upload-text { color: #666; font-size: 14px; }
+        .upload-text strong { color: #667eea; }
+        .upload-hint { font-size: 12px; color: #999; margin-top: 8px; }
+        .file-input { display: none; }
+        .uploaded-files { margin-top: 12px; }
         .file-tag {
             display: inline-flex;
             align-items: center;
@@ -317,24 +153,7 @@
             font-size: 12px;
             margin: 4px;
         }
-        
-        .file-tag .remove {
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .file-tag .remove:hover {
-            color: #f5576c;
-        }
-        
-        /* 指标卡片 */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
+        .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
         .metric-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
@@ -342,34 +161,11 @@
             color: white;
             text-align: center;
         }
-        
-        .metric-card.warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-        }
-        
-        .metric-card.success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-        
-        .metric-value {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        
-        .metric-label {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        /* 分析标签页 */
-        .tab-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
+        .metric-card.warning { background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); }
+        .metric-card.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .metric-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .metric-label { font-size: 12px; opacity: 0.9; }
+        .tab-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
         .tab-btn {
             padding: 8px 16px;
             border: 1px solid #e0e0e0;
@@ -379,68 +175,14 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
-        .tab-btn:hover {
-            border-color: #667eea;
-            color: #667eea;
-        }
-        
-        .tab-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-        }
-        
-        /* 图表容器 */
-        .chart-container {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .chart-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 12px;
-        }
-        
-        .chart {
-            width: 100%;
-            height: 300px;
-        }
-        
-        /* 空状态 */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-        
-        .empty-state .icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-        
-        .empty-state h3 {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        
-        .empty-state p {
-            font-size: 14px;
-        }
-        
-        /* 加载状态 */
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
-        }
-        
+        .tab-btn:hover { border-color: #667eea; color: #667eea; }
+        .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: transparent; }
+        .chart-container { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .chart-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px; }
+        .chart { width: 100%; height: 300px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+        .loading { text-align: center; padding: 20px; color: #667eea; }
         .spinner {
             width: 40px;
             height: 40px;
@@ -450,48 +192,132 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 12px;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* ============ 主播排班样式 ============ */
+        .anchor-section { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .anchor-schedule-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
         }
-        
-        /* 数据表格 */
-        .data-table {
+        .badge-new { background: #d1fae5; color: #065f46; }
+        .anchor-item { background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 12px; position: relative; }
+        .anchor-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;}
+        .anchor-name-input {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+        }
+        .anchor-delete-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .anchor-delete-btn:hover { background: #ef4444; color: white; }
+        .time-range { display: flex; align-items: center; gap: 10px; }
+        .time-label { font-size: 13px; color: #666; min-width: 50px; }
+        .wheel-picker-wrapper { position: relative; flex: 1; }
+        .wheel-picker-trigger {
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .wheel-picker-trigger:active { border-color: #667eea; }
+        .wheel-picker-arrow { color: #999; font-size: 12px; }
+        .wheel-picker-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .wheel-picker-content {
+            background: white;
+            border-radius: 16px 16px 0 0;
             width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            margin-top: 12px;
+            max-width: 400px;
+            padding: 20px;
+            animation: slideUp 0.3s ease;
         }
-        
-        .data-table th,
-        .data-table td {
-            padding: 10px 8px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0f0;
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .wheel-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .wheel-picker-title { font-size: 16px; font-weight: 600; color: #333; }
+        .wheel-picker-btn { padding: 8px 16px; border: none; border-radius: 20px; font-size: 14px; cursor: pointer; }
+        .wheel-picker-cancel { background: #f0f0f0; color: #666; }
+        .wheel-picker-confirm { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .wheel-container { display: flex; justify-content: center; gap: 20px; height: 180px; overflow: hidden; position: relative; }
+        .wheel-column { width: 80px; overflow-y: auto; scroll-behavior: smooth; scrollbar-width: none; }
+        .wheel-column::-webkit-scrollbar { display: none; }
+        .wheel-item { height: 44px; line-height: 44px; text-align: center; font-size: 18px; color: #999; cursor: pointer; transition: all 0.2s; }
+        .wheel-item.selected { color: #333; font-weight: 600; font-size: 20px; }
+        .wheel-mask {
+            position: absolute;
+            left: 0; right: 0; top: 50%;
+            transform: translateY(-50%);
+            height: 44px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            pointer-events: none;
+            border-top: 1px solid #667eea;
+            border-bottom: 1px solid #667eea;
         }
-        
-        .data-table th {
-            background: #f8fafc;
+        .add-anchor-btn {
+            width: 100%;
+            padding: 14px;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            background: transparent;
+            color: #667eea;
+            font-size: 15px;
             font-weight: 600;
-            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        
-        .data-table tr:hover {
+        .add-anchor-btn:hover { border-color: #667eea; background: rgba(102, 126, 234, 0.05); }
+        .anchor-hint { font-size: 12px; color: #999; margin-top: 10px; text-align: center; }
+        .schedule-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
             background: #f8fafc;
+            border-radius: 8px;
+            font-size: 12px;
         }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
         
         @media (max-width: 400px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .price-selector {
-                flex-direction: column;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: 1fr;
-            }
+            .form-row { grid-template-columns: 1fr; }
+            .price-selector { flex-direction: column; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .time-range { flex-direction: column; align-items: stretch; }
+            .time-label { margin-bottom: 6px; }
         }
     </style>
 </head>
@@ -504,26 +330,21 @@
         
         <div class="section">
             <div class="section-title">基础参数</div>
-            
             <div class="form-group">
                 <label>客单价选择</label>
                 <div class="price-selector">
                     <div class="price-option active" data-price="59.9" onclick="selectPrice(this)">
-                        <div class="price">¥59.9</div>
-                        <div class="unit">基础款</div>
+                        <div class="price">¥59.9</div><div class="unit">基础款</div>
                     </div>
                     <div class="price-option" data-price="118" onclick="selectPrice(this)">
-                        <div class="price">¥118</div>
-                        <div class="unit">升级款</div>
+                        <div class="price">¥118</div><div class="unit">升级款</div>
                     </div>
                 </div>
             </div>
-            
             <div class="form-group">
                 <label>每日销售量（单）</label>
                 <input type="number" id="dailyOrders" value="500" min="0" step="1" oninput="updateAdSpend()">
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>ROI</label>
@@ -534,7 +355,6 @@
                     <div id="adSpendDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
                 </div>
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>退款率（%）</label>
@@ -549,7 +369,6 @@
         
         <div class="section">
             <div class="section-title">人力成本</div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>主播每小时工资（元）</label>
@@ -560,7 +379,6 @@
                     <input type="number" id="dailyHours" value="19" min="0" step="0.5">
                 </div>
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>房租水电宽带（元/月）</label>
@@ -575,54 +393,47 @@
         
         <div class="section">
             <div class="section-title">税务板块</div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>抖店扣费（%）</label>
                     <input type="number" id="douyinFeeRate" value="2" min="0" max="100" step="0.1" oninput="calculate()">
                 </div>
                 <div class="form-group">
-                    <label>抖店扣费（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
+                    <label>抖店扣费（元）</label>
                     <div id="douyinFeeDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
-                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货) × 扣费比例</span>
                 </div>
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>主播奖励（%）</label>
                     <input type="number" id="anchorRewardRate" value="3" min="0" max="100" step="0.1" oninput="calculate()">
                 </div>
                 <div class="form-group">
-                    <label>主播奖励（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
+                    <label>主播奖励（元）</label>
                     <div id="anchorRewardDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
-                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货-投流) × 奖励比例</span>
                 </div>
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>公司缴税（%）</label>
                     <input type="number" id="companyTaxRate" value="1" min="0" max="100" step="0.1" oninput="calculate()">
                 </div>
                 <div class="form-group">
-                    <label>公司缴税（元）<span style="font-size:12px;color:#999;font-weight:normal;margin-left:8px;">自动计算</span></label>
+                    <label>公司缴税（元）</label>
                     <div id="companyTaxDisplay" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:18px;font-weight:600;color:#333;">-</div>
-                    <span style="font-size:11px;color:#999;display:block;margin-top:4px;">= (销售-退货) × 缴税比例</span>
                 </div>
             </div>
         </div>
         
         <div class="section">
-            <div class="section-title">私域转化参数 <span style="font-size:12px;color:#999;font-weight:normal;">（基数：有效单数 = 购买人数 × (1-退款率)）</span></div>
-            
+            <div class="section-title">私域转化参数</div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>加微率（%）<span style="font-size:11px;color:#999;display:block;">= 加微信人数 ÷ 有效单数</span></label>
+                    <label>加微率（%）</label>
                     <input type="number" id="wechatRate" value="0" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
-                    <label>进群率（%）<span style="font-size:11px;color:#999;display:block;">= 进群人数 ÷ 加微信人数</span></label>
+                    <label>进群率（%）</label>
                     <input type="number" id="groupRate" value="62" min="0" max="100" step="1">
                 </div>
             </div>
@@ -630,10 +441,9 @@
         
         <div class="section">
             <div class="section-title">二转参数</div>
-            
             <div class="form-row">
                 <div class="form-group">
-                    <label>二转转率（%）<span style="font-size:11px;color:#999;display:block;">= 二转购买人数 ÷ 进群人数</span></label>
+                    <label>二转转率（%）</label>
                     <input type="number" id="convert2Rate" value="10" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
@@ -641,19 +451,17 @@
                     <input type="number" id="price2" value="299" min="0" step="1">
                 </div>
             </div>
-            
             <div class="form-group">
-                <label>二转分佣（%）<span style="font-size:11px;color:#999;display:block;">你能拿到的佣金比例</span></label>
+                <label>二转分佣（%）</label>
                 <input type="number" id="commission2" value="30" min="0" max="100" step="1">
             </div>
         </div>
         
         <div class="section">
             <div class="section-title">三转参数</div>
-            
             <div class="form-row">
                 <div class="form-group">
-                    <label>三转转率（%）<span style="font-size:11px;color:#999;display:block;">= 三转购买人数 ÷ 二转购买人数</span></label>
+                    <label>三转转率（%）</label>
                     <input type="number" id="convert3Rate" value="20" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
@@ -661,9 +469,8 @@
                     <input type="number" id="price3" value="3600" min="0" step="1">
                 </div>
             </div>
-            
             <div class="form-group">
-                <label>三转分佣（%）<span style="font-size:11px;color:#999;display:block;">你能拿到的佣金比例</span></label>
+                <label>三转分佣（%）</label>
                 <input type="number" id="commission3" value="35" min="0" max="100" step="1">
             </div>
         </div>
@@ -674,7 +481,6 @@
         
         <div id="resultSection" class="section hidden">
             <div class="section-title">计算结果</div>
-            
             <div class="result-card">
                 <div class="result-row">
                     <span class="result-label">日利润</span>
@@ -685,95 +491,36 @@
                     <span id="monthlyProfit" class="result-value">-</span>
                 </div>
             </div>
-            
             <div class="analysis-card">
                 <div class="analysis-title">📊 盈亏平衡分析</div>
-                <div class="analysis-item">
-                    <span>保本销量（每日最少需卖出）</span>
-                    <span id="breakevenOrders">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>退款率上限（%）</span>
-                    <span id="maxRefundRate">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>ROI下限</span>
-                    <span id="minROI">-</span>
-                </div>
+                <div class="analysis-item"><span>保本销量</span><span id="breakevenOrders">-</span></div>
+                <div class="analysis-item"><span>退款率上限</span><span id="maxRefundRate">-</span></div>
+                <div class="analysis-item"><span>ROI下限</span><span id="minROI">-</span></div>
             </div>
-            
             <div class="analysis-card">
                 <div class="analysis-title">💰 收入构成（月）</div>
-                <div class="analysis-item">
-                    <span>销售毛收入（不含成本）</span>
-                    <span id="salesGrossIncome">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>二转收入</span>
-                    <span id="revenue2Display">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>三转收入</span>
-                    <span id="revenue3Display">-</span>
-                </div>
+                <div class="analysis-item"><span>销售毛收入</span><span id="salesGrossIncome">-</span></div>
+                <div class="analysis-item"><span>二转收入</span><span id="revenue2Display">-</span></div>
+                <div class="analysis-item"><span>三转收入</span><span id="revenue3Display">-</span></div>
             </div>
-            
             <div class="analysis-card">
                 <div class="analysis-title">📅 盈利构成（月）</div>
-                <div class="analysis-item">
-                    <span>当月利润</span>
-                    <span id="monthlyProfitTotal">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>前端销售纯利</span>
-                    <span id="frontProfitMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>二转利润</span>
-                    <span id="secondProfitMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>三转利润</span>
-                    <span id="thirdProfitMonth">-</span>
-                </div>
+                <div class="analysis-item"><span>当月利润</span><span id="monthlyProfitTotal">-</span></div>
+                <div class="analysis-item"><span>前端销售纯利</span><span id="frontProfitMonth">-</span></div>
+                <div class="analysis-item"><span>二转利润</span><span id="secondProfitMonth">-</span></div>
+                <div class="analysis-item"><span>三转利润</span><span id="thirdProfitMonth">-</span></div>
             </div>
-            
             <div class="analysis-card">
                 <div class="analysis-title">📊 成本构成（月）</div>
-                <div class="analysis-item">
-                    <span>产品成本</span>
-                    <span id="costProductMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>抖店扣费</span>
-                    <span id="douyinFeeMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>主播奖励</span>
-                    <span id="anchorRewardMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>公司缴税</span>
-                    <span id="companyTaxMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>主播工资</span>
-                    <span id="anchorWageMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>房租杂费</span>
-                    <span id="rentMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>员工工资</span>
-                    <span id="staffMonth">-</span>
-                </div>
-                <div class="analysis-item">
-                    <span>老板收入</span>
-                    <span id="bossIncome">-</span>
-                </div>
+                <div class="analysis-item"><span>产品成本</span><span id="costProductMonth">-</span></div>
+                <div class="analysis-item"><span>抖店扣费</span><span id="douyinFeeMonth">-</span></div>
+                <div class="analysis-item"><span>主播奖励</span><span id="anchorRewardMonth">-</span></div>
+                <div class="analysis-item"><span>公司缴税</span><span id="companyTaxMonth">-</span></div>
+                <div class="analysis-item"><span>主播工资</span><span id="anchorWageMonth">-</span></div>
+                <div class="analysis-item"><span>房租杂费</span><span id="rentMonth">-</span></div>
+                <div class="analysis-item"><span>员工工资</span><span id="staffMonth">-</span></div>
+                <div class="analysis-item"><span>老板收入</span><span id="bossIncome">-</span></div>
             </div>
-            
             <div id="tipsBox" class="tips hidden"></div>
         </div>
         
@@ -781,61 +528,58 @@
         <div class="section analysis-section">
             <div class="section-title">📊 数据分析</div>
             
-            <!-- 上传区域 -->
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('orderFileInput').click()">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">
-                    <strong>点击上传订单/退款Excel</strong>
+            <!-- 主播排班配置 -->
+            <div class="anchor-section">
+                <div class="section-title" style="margin-bottom:12px;font-size:15px;">👤 主播排班配置</div>
+                
+                <!-- 排班说明 -->
+                <div class="schedule-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#fef3c7;"></span>
+                        <span>4/23: 无上午场</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#dbeafe;"></span>
+                        <span>4/24-27: 标准排班</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#d1fae5;"></span>
+                        <span>4/28起: 晚场吴沥菊</span>
+                    </div>
                 </div>
+                
+                <div id="anchorList"></div>
+                <button class="add-anchor-btn" onclick="addAnchorShift()">+ 添加主播时段</button>
+                <div class="anchor-hint">💡 系统会根据订单日期自动匹配对应日期的排班</div>
+            </div>
+            
+            <!-- 上传区域 -->
+            <div class="upload-area" onclick="document.getElementById('orderFileInput').click()">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text"><strong>点击上传订单/退款Excel</strong></div>
                 <div class="upload-hint">支持 .xlsx, .xls, .csv 格式</div>
                 <input type="file" id="orderFileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleOrderFile(this)">
             </div>
             <div id="orderFileInfo" class="uploaded-files"></div>
             
-            <div class="upload-area" id="shiftUploadArea" onclick="document.getElementById('shiftFileInput').click()" style="margin-top: 12px;">
-                <div class="upload-icon">👤</div>
-                <div class="upload-text">
-                    <strong>点击上传主播值班表</strong>（可选）
-                </div>
-                <div class="upload-hint">包含：日期、时段、主播名</div>
-                <input type="file" id="shiftFileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleShiftFile(this)">
-            </div>
-            <div id="shiftFileInfo" class="uploaded-files"></div>
-            
-            <!-- 数据状态 -->
             <div id="dataStatus" class="empty-state">
                 <div class="icon">📈</div>
                 <h3>暂无数据</h3>
                 <p>上传Excel文件后自动分析退款数据</p>
             </div>
             
-            <!-- 加载状态 -->
             <div id="loadingStatus" class="loading hidden">
                 <div class="spinner"></div>
                 <div>正在解析数据...</div>
             </div>
             
-            <!-- 指标卡片 -->
             <div id="metricsCards" class="metrics-grid hidden">
-                <div class="metric-card">
-                    <div class="metric-value" id="totalOrders">-</div>
-                    <div class="metric-label">总订单数</div>
-                </div>
-                <div class="metric-card warning">
-                    <div class="metric-value" id="refundRateDisplay">-</div>
-                    <div class="metric-label">退款率</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="refundAmount">-</div>
-                    <div class="metric-label">退款金额</div>
-                </div>
-                <div class="metric-card success">
-                    <div class="metric-value" id="avgDailyRefund">-</div>
-                    <div class="metric-label">日均退款</div>
-                </div>
+                <div class="metric-card"><div class="metric-value" id="totalOrders">-</div><div class="metric-label">总订单数</div></div>
+                <div class="metric-card warning"><div class="metric-value" id="refundRateDisplay">-</div><div class="metric-label">退款率</div></div>
+                <div class="metric-card"><div class="metric-value" id="refundAmount">-</div><div class="metric-label">退款金额</div></div>
+                <div class="metric-card success"><div class="metric-value" id="avgDailyRefund">-</div><div class="metric-label">日均退款</div></div>
             </div>
             
-            <!-- 分析标签页 -->
             <div id="analysisTabs" class="tab-buttons hidden">
                 <button class="tab-btn active" onclick="switchTab('overview')">退款总览</button>
                 <button class="tab-btn" onclick="switchTab('hourly')">时段分析</button>
@@ -845,43 +589,48 @@
                 <button class="tab-btn" onclick="switchTab('refundCurve')">7天退款</button>
             </div>
             
-            <!-- 图表区域 -->
             <div id="chartArea" class="hidden">
-                <!-- 退款总览图表 -->
                 <div id="overviewChart" class="chart-container">
                     <div class="chart-title">📊 退款结构分析</div>
                     <div id="overviewChartInner" class="chart"></div>
                 </div>
-                
-                <!-- 时段分析图表 -->
                 <div id="hourlyChart" class="chart-container hidden">
                     <div class="chart-title">⏰ 24小时退款分布</div>
                     <div id="hourlyChartInner" class="chart"></div>
                 </div>
-                
-                <!-- 星期分析图表 -->
                 <div id="weekdayChart" class="chart-container hidden">
                     <div class="chart-title">📅 星期退款对比</div>
                     <div id="weekdayChartInner" class="chart"></div>
                 </div>
-                
-                <!-- 日趋势图表 -->
                 <div id="dailyChart" class="chart-container hidden">
                     <div class="chart-title">📈 每日退款率走势</div>
                     <div id="dailyChartInner" class="chart"></div>
                 </div>
-                
-                <!-- 主播分析图表 -->
                 <div id="anchorChart" class="chart-container hidden">
                     <div class="chart-title">👤 主播退款率对比</div>
                     <div id="anchorChartInner" class="chart"></div>
                 </div>
-                
-                <!-- 7天退款曲线图表 -->
                 <div id="refundCurveChart" class="chart-container hidden">
                     <div class="chart-title">📉 支付后N天退款分布</div>
                     <div id="refundCurveChartInner" class="chart"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 滚轮选择器弹窗 -->
+    <div id="wheelPickerModal" class="wheel-picker-modal hidden">
+        <div class="wheel-picker-content">
+            <div class="wheel-picker-header">
+                <button class="wheel-picker-btn wheel-picker-cancel" onclick="closeWheelPicker()">取消</button>
+                <span class="wheel-picker-title" id="wheelPickerTitle">选择时间</span>
+                <button class="wheel-picker-btn wheel-picker-confirm" onclick="confirmWheelPicker()">确定</button>
+            </div>
+            <div class="wheel-container">
+                <div class="wheel-column" id="hourColumn"></div>
+                <div style="line-height:44px;color:#999;">:</div>
+                <div class="wheel-column" id="minuteColumn"></div>
+                <div class="wheel-mask"></div>
             </div>
         </div>
     </div>
@@ -903,23 +652,17 @@
             document.getElementById('adSpendDisplay').textContent = '¥' + adSpend.toFixed(0);
         }
         
-        function getValue(id) {
-            return parseFloat(document.getElementById(id).value) || 0;
-        }
+        function getValue(id) { return parseFloat(document.getElementById(id).value) || 0; }
         
         function formatMoney(value) {
             const formatted = Math.abs(value).toFixed(2);
-            if (value < 0) {
-                return '-¥' + formatted;
-            }
-            return '¥' + formatted;
+            return value < 0 ? '-¥' + formatted : '¥' + formatted;
         }
         
         function calculate() {
             const dailyOrders = getValue('dailyOrders');
             const roiInput = getValue('roi');
             const adSpend = roiInput > 0 ? (dailyOrders * selectedPrice / roiInput) : 0;
-            
             document.getElementById('adSpendDisplay').textContent = '¥' + adSpend.toFixed(0);
             
             const refundRate = getValue('refundRate') / 100;
@@ -936,14 +679,12 @@
             const convert3Rate = getValue('convert3Rate') / 100;
             const price3 = getValue('price3');
             const commission3 = getValue('commission3') / 100;
-            
             const douyinFeeRate = getValue('douyinFeeRate') / 100;
             const anchorRewardRate = getValue('anchorRewardRate') / 100;
             const companyTaxRate = getValue('companyTaxRate') / 100;
             
             const validOrders = dailyOrders * (1 - refundRate);
             const salesRevenue = validOrders * selectedPrice;
-            
             const douyinFee = salesRevenue * douyinFeeRate;
             const anchorReward = Math.max(0, salesRevenue - adSpend) * anchorRewardRate;
             const companyTax = salesRevenue * companyTaxRate;
@@ -958,9 +699,7 @@
             const costAnchor = anchorWage * dailyHours;
             const dailyRent = rentCost / 30;
             const dailyStaff = staffCost / 30;
-            
             const dailyProfit = salesRevenue - costProduct - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax + revenue2 + revenue3;
-            const monthlyProfit = dailyProfit * 30;
             
             const fixedDailyCost = costAnchor + dailyRent + dailyStaff;
             const taxRate = douyinFeeRate + anchorRewardRate + companyTaxRate;
@@ -969,56 +708,44 @@
             const effectiveMargin = unitMargin + avgPrivateRevenue;
             
             let breakevenOrders = 0;
-            if (effectiveMargin > 0) {
-                breakevenOrders = Math.ceil((fixedDailyCost + adSpend) / effectiveMargin);
-            }
+            if (effectiveMargin > 0) breakevenOrders = Math.ceil((fixedDailyCost + adSpend) / effectiveMargin);
             
             let maxRefundRate = 0;
             const denominator = dailyOrders * (selectedPrice * (1 - taxRate) - productCost);
             if (denominator > 0) {
                 const numerator = dailyOrders * selectedPrice / 2 + fixedDailyCost - (revenue2 + revenue3);
-                maxRefundRate = 1 - numerator / denominator;
-                maxRefundRate = Math.max(0, Math.min(100, maxRefundRate * 100));
+                maxRefundRate = Math.max(0, Math.min(100, (1 - numerator / denominator) * 100));
             }
             
             let minROI = 0;
             const roiDenominator = dailyOrders * (selectedPrice * (1 - taxRate) - productCost) * 0.73 + (revenue2 + revenue3) - fixedDailyCost;
-            if (roiDenominator > 0) {
-                minROI = dailyOrders * selectedPrice / roiDenominator;
-                minROI = Math.max(0, minROI);
-            }
+            if (roiDenominator > 0) minROI = Math.max(0, dailyOrders * selectedPrice / roiDenominator);
             
             document.getElementById('resultSection').classList.remove('hidden');
-            
             const dailyProfitEl = document.getElementById('dailyProfit');
             dailyProfitEl.textContent = formatMoney(dailyProfit);
             dailyProfitEl.className = 'result-value ' + (dailyProfit >= 0 ? 'profit' : 'loss');
             
             const monthlyProfitEl = document.getElementById('monthlyProfit');
-            monthlyProfitEl.textContent = formatMoney(monthlyProfit);
-            monthlyProfitEl.className = 'result-value ' + (monthlyProfit >= 0 ? 'profit' : 'loss');
+            monthlyProfitEl.textContent = formatMoney(dailyProfit * 30);
+            monthlyProfitEl.className = 'result-value ' + (dailyProfit * 30 >= 0 ? 'profit' : 'loss');
             
             document.getElementById('breakevenOrders').textContent = breakevenOrders + ' 单';
             document.getElementById('maxRefundRate').textContent = maxRefundRate.toFixed(1) + '%';
             document.getElementById('minROI').textContent = minROI.toFixed(2);
             
             const salesGrossIncome = salesRevenue * 30;
-            
             document.getElementById('salesGrossIncome').textContent = formatMoney(salesGrossIncome);
             document.getElementById('revenue2Display').textContent = formatMoney(revenue2 * 30);
             document.getElementById('revenue3Display').textContent = formatMoney(revenue3 * 30);
             
             const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax;
-            const dailyProfitNew = frontProfitVal + revenue2 + revenue3;
-            const monthlyProfitNew = dailyProfitNew * 30;
-            
-            document.getElementById('monthlyProfitTotal').textContent = formatMoney(monthlyProfitNew);
+            document.getElementById('monthlyProfitTotal').textContent = formatMoney((frontProfitVal + revenue2 + revenue3) * 30);
             document.getElementById('frontProfitMonth').textContent = formatMoney(frontProfitVal * 30);
             document.getElementById('secondProfitMonth').textContent = formatMoney(revenue2 * 30);
             document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
             
             const totalRevenue = salesGrossIncome - adSpend * 30;
-            
             function formatWithPercent(value, total) {
                 const percent = total > 0 ? (value / total * 100).toFixed(1) : '0.0';
                 return formatMoney(value) + ' (' + percent + '%)';
@@ -1031,51 +758,267 @@
             document.getElementById('anchorWageMonth').textContent = formatWithPercent(costAnchor * 30, totalRevenue);
             document.getElementById('rentMonth').textContent = formatWithPercent(rentCost, totalRevenue);
             document.getElementById('staffMonth').textContent = formatWithPercent(staffCost, totalRevenue);
-            document.getElementById('bossIncome').textContent = formatWithPercent(monthlyProfitNew, totalRevenue);
+            document.getElementById('bossIncome').textContent = formatWithPercent((frontProfitVal + revenue2 + revenue3) * 30, totalRevenue);
             
             const tipsBox = document.getElementById('tipsBox');
             if (dailyProfit < 0) {
                 tipsBox.classList.remove('hidden');
-                tipsBox.innerHTML = '⚠️ 当前处于亏损状态！建议：降低投流金额、提高转化率或降低成本。';
+                tipsBox.innerHTML = '⚠️ 当前处于亏损状态！';
             } else if (refundRate > maxRefundRate / 100) {
                 tipsBox.classList.remove('hidden');
-                tipsBox.innerHTML = '⚠️ 当前退款率已超过上限！需控制退货率至 ' + maxRefundRate.toFixed(1) + '% 以下。';
+                tipsBox.innerHTML = '⚠️ 当前退款率超过上限！';
             } else if (roiInput < minROI) {
                 tipsBox.classList.remove('hidden');
-                tipsBox.innerHTML = '⚠️ 当前ROI低于下限！ROI需达到 ' + minROI.toFixed(2) + ' 以上才能盈利。';
+                tipsBox.innerHTML = '⚠️ 当前ROI低于下限！';
             } else {
                 tipsBox.classList.add('hidden');
             }
-            
-            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
         }
         
         window.onload = function() {
             updateAdSpend();
             calculate();
+            loadAnchorShifts();
         };
         
+        // ==================== 主播排班功能 ====================
+        let anchorShifts = [];
+        let currentPickerTarget = null;
+        let selectedHour = 0;
+        let selectedMinute = 0;
+        
+        // 按日期的精确排班表
+        const scheduleByDate = {
+            // 4月23日：上午无排班
+            '2026-04-23': [
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '马静', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 },
+                { name: '陈璐', startHour: 20, startMinute: 30, endHour: 1, endMinute: 0 }
+            ],
+            // 4月24日
+            '2026-04-24': [
+                { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 }
+            ],
+            // 4月25日
+            '2026-04-25': [
+                { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 }
+            ],
+            // 4月26、27日：按24-25规则（无晚场）
+            '2026-04-26': [
+                { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 }
+            ],
+            '2026-04-27': [
+                { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 }
+            ],
+            // 4月28日起：晚场换成吴沥菊
+            '2026-04-28': [
+                { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 },
+                { name: '吴沥菊', startHour: 20, startMinute: 30, endHour: 0, endMinute: 30 }
+            ],
+            '2026-04-29': [
+                { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 },
+                { name: '吴沥菊', startHour: 20, startMinute: 30, endHour: 0, endMinute: 30 }
+            ],
+            '2026-04-30': [
+                { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+                { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+                { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 },
+                { name: '吴沥菊', startHour: 20, startMinute: 30, endHour: 0, endMinute: 30 }
+            ]
+        };
+        
+        // 默认排班（4月28日起的规则）
+        const defaultSchedule = [
+            { name: '马静', startHour: 7, startMinute: 0, endHour: 11, endMinute: 30 },
+            { name: '宋粉粉', startHour: 11, startMinute: 30, endHour: 16, endMinute: 0 },
+            { name: '陈璐', startHour: 16, startMinute: 0, endHour: 20, endMinute: 30 },
+            { name: '吴沥菊', startHour: 20, startMinute: 30, endHour: 0, endMinute: 30 }
+        ];
+        
+        // 根据日期获取排班
+        function getScheduleForDate(dateStr) {
+            if (dateStr && scheduleByDate[dateStr]) {
+                return scheduleByDate[dateStr];
+            }
+            // 检查是否在4月28日之后
+            if (dateStr && dateStr >= '2026-04-28') {
+                return scheduleByDate['2026-04-28'];
+            }
+            // 检查是否在4月24-27日
+            if (dateStr && dateStr >= '2026-04-24' && dateStr <= '2026-04-27') {
+                return scheduleByDate['2026-04-24'];
+            }
+            // 4月23日特殊处理（无上午场）
+            if (dateStr === '2026-04-23') {
+                return scheduleByDate['2026-04-23'];
+            }
+            return defaultSchedule;
+        }
+        
+        function loadAnchorShifts() {
+            const saved = localStorage.getItem('anchorShifts');
+            if (saved) {
+                try {
+                    anchorShifts = JSON.parse(saved);
+                } catch (e) {
+                    anchorShifts = [...defaultSchedule];
+                }
+            } else {
+                anchorShifts = [...defaultSchedule];
+            }
+            renderAnchorList();
+        }
+        
+        function saveAnchorShifts() {
+            localStorage.setItem('anchorShifts', JSON.stringify(anchorShifts));
+        }
+        
+        function renderAnchorList() {
+            const container = document.getElementById('anchorList');
+            const colors = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399'];
+            container.innerHTML = anchorShifts.map((shift, index) => {
+                const color = colors[index % colors.length];
+                const badge = index === 3 ? '<span class="anchor-schedule-badge badge-new">4/28起</span>' : '';
+                return `
+                <div class="anchor-item" data-index="${index}">
+                    <div class="anchor-item-header">
+                        <input type="text" class="anchor-name-input" value="${shift.name}" 
+                               placeholder="主播名" onchange="updateAnchorName(${index}, this.value)"
+                               style="border-left: 3px solid ${color};">
+                        ${badge}
+                        <button class="anchor-delete-btn" onclick="deleteAnchorShift(${index})">×</button>
+                    </div>
+                    <div class="time-range">
+                        <span class="time-label">开始</span>
+                        <div class="wheel-picker-wrapper">
+                            <div class="wheel-picker-trigger" onclick="openTimePicker('start', ${index}, ${shift.startHour}, ${shift.startMinute})">
+                                <span>${formatTime(shift.startHour, shift.startMinute)}</span>
+                                <span class="wheel-picker-arrow">▼</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="time-range" style="margin-top:10px;">
+                        <span class="time-label">结束</span>
+                        <div class="wheel-picker-wrapper">
+                            <div class="wheel-picker-trigger" onclick="openTimePicker('end', ${index}, ${shift.endHour}, ${shift.endMinute})">
+                                <span>${formatTime(shift.endHour, shift.endMinute)}</span>
+                                <span class="wheel-picker-arrow">▼</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `}).join('');
+        }
+        
+        function formatTime(hour, minute) {
+            return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+        }
+        
+        function addAnchorShift() {
+            anchorShifts.push({ name: '新主播', startHour: 0, startMinute: 0, endHour: 23, endMinute: 30 });
+            saveAnchorShifts();
+            renderAnchorList();
+        }
+        
+        function deleteAnchorShift(index) {
+            anchorShifts.splice(index, 1);
+            saveAnchorShifts();
+            renderAnchorList();
+            if (parsedOrders.length > 0) analyzeData();
+        }
+        
+        function updateAnchorName(index, name) {
+            anchorShifts[index].name = name;
+            saveAnchorShifts();
+            if (parsedOrders.length > 0) analyzeData();
+        }
+        
+        function openTimePicker(type, index, hour, minute) {
+            currentPickerTarget = { type, index };
+            selectedHour = hour;
+            selectedMinute = minute;
+            
+            document.getElementById('wheelPickerTitle').textContent = type === 'start' ? '选择开始时间' : '选择结束时间';
+            
+            const hours = Array.from({length: 24}, (_, i) => i);
+            const minutes = [0, 30];
+            
+            const hourCol = document.getElementById('hourColumn');
+            const minuteCol = document.getElementById('minuteColumn');
+            
+            hourCol.innerHTML = hours.map(h => 
+                `<div class="wheel-item ${h === selectedHour ? 'selected' : ''}" data-hour="${h}">${String(h).padStart(2, '0')}</div>`
+            ).join('');
+            
+            minuteCol.innerHTML = minutes.map(m => 
+                `<div class="wheel-item ${m === selectedMinute ? 'selected' : ''}" data-minute="${m}">${String(m).padStart(2, '0')}</div>`
+            ).join('');
+            
+            hourCol.onscroll = () => {
+                const items = hourCol.querySelectorAll('.wheel-item');
+                const idx = Math.round(hourCol.scrollTop / 44);
+                selectedHour = Math.max(0, Math.min(23, idx));
+                items.forEach((item, i) => item.classList.toggle('selected', i === selectedHour));
+            };
+            
+            minuteCol.onscroll = () => {
+                const items = minuteCol.querySelectorAll('.wheel-item');
+                const idx = Math.round(minuteCol.scrollTop / 44);
+                selectedMinute = idx === 0 ? 0 : 30;
+                items.forEach((item, i) => item.classList.toggle('selected', (i === 0 && selectedMinute === 0) || (i === 1 && selectedMinute === 30)));
+            };
+            
+            setTimeout(() => {
+                hourCol.scrollTop = selectedHour * 44;
+                minuteCol.scrollTop = selectedMinute === 0 ? 0 : 44;
+            }, 100);
+            
+            document.getElementById('wheelPickerModal').classList.remove('hidden');
+        }
+        
+        function closeWheelPicker() {
+            document.getElementById('wheelPickerModal').classList.add('hidden');
+        }
+        
+        function confirmWheelPicker() {
+            if (currentPickerTarget) {
+                const { type, index } = currentPickerTarget;
+                if (type === 'start') {
+                    anchorShifts[index].startHour = selectedHour;
+                    anchorShifts[index].startMinute = selectedMinute;
+                } else {
+                    anchorShifts[index].endHour = selectedHour;
+                    anchorShifts[index].endMinute = selectedMinute;
+                }
+                saveAnchorShifts();
+                renderAnchorList();
+            }
+            closeWheelPicker();
+            if (parsedOrders.length > 0) analyzeData();
+        }
+        
         // ==================== 数据分析功能 ====================
-        
-        // 全局变量存储解析后的数据
         let orderData = null;
-        let shiftData = null;
         let parsedOrders = [];
-        let parsedShifts = [];
         
-        // 图表实例
-        let overviewChart = null;
-        let hourlyChart = null;
-        let weekdayChart = null;
-        let dailyChart = null;
-        let anchorChart = null;
-        let refundCurveChart = null;
+        let overviewChart = null, hourlyChart = null, weekdayChart = null;
+        let dailyChart = null, anchorChart = null, refundCurveChart = null;
         
-        // 文件上传处理 - 订单数据
         function handleOrderFile(input) {
             const file = input.files[0];
             if (!file) return;
-            
             showLoading();
             
             const reader = new FileReader();
@@ -1089,9 +1032,8 @@
                     orderData = jsonData;
                     parsedOrders = parseOrderData(jsonData);
                     
-                    // 显示文件名
                     document.getElementById('orderFileInfo').innerHTML = 
-                        `<span class="file-tag">📄 ${file.name} <span class="remove" onclick="removeOrderFile()">×</span></span>`;
+                        `<span class="file-tag">📄 ${file.name}</span>`;
                     
                     analyzeData();
                 } catch (error) {
@@ -1103,75 +1045,17 @@
             reader.readAsArrayBuffer(file);
         }
         
-        // 文件上传处理 - 值班表
-        function handleShiftFile(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    
-                    shiftData = jsonData;
-                    parsedShifts = parseShiftData(jsonData);
-                    
-                    document.getElementById('shiftFileInfo').innerHTML = 
-                        `<span class="file-tag">👤 ${file.name} <span class="remove" onclick="removeShiftFile()">×</span></span>`;
-                    
-                    // 如果已有订单数据，重新分析
-                    if (parsedOrders.length > 0) {
-                        analyzeData();
-                    }
-                } catch (error) {
-                    console.error('解析值班表失败:', error);
-                    alert('解析值班表文件失败，请检查文件格式！');
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        function removeOrderFile() {
-            orderData = null;
-            parsedOrders = [];
-            document.getElementById('orderFileInput').value = '';
-            document.getElementById('orderFileInfo').innerHTML = '';
-            resetAnalysis();
-        }
-        
-        function removeShiftFile() {
-            shiftData = null;
-            parsedShifts = [];
-            document.getElementById('shiftFileInput').value = '';
-            document.getElementById('shiftFileInfo').innerHTML = '';
-            if (parsedOrders.length > 0) {
-                analyzeData();
-            }
-        }
-        
-        // 解析订单数据（智能识别字段）
         function parseOrderData(data) {
             if (!data || data.length === 0) return [];
             
             const firstRow = data[0];
             const keys = Object.keys(firstRow);
             
-            // 智能识别字段名
-            let orderNoField, amountField, refundField, timeField, statusField;
-            
-            // 订单号字段
-            orderNoField = keys.find(k => /订单|order|编号|no|num/i.test(k)) || keys[0];
-            // 金额字段
-            amountField = keys.find(k => /金额|amount|实付|price|总价|sum/i.test(k)) || keys[1];
-            // 退款字段
-            refundField = keys.find(k => /退款|refund|退货/i.test(k));
-            // 时间字段
-            timeField = keys.find(k => /时间|date|时间|支付时间|下单时间|created|created_at/i.test(k));
-            // 状态字段
-            statusField = keys.find(k => /状态|status|类型|type/i.test(k));
+            const orderNoField = keys.find(k => /订单|order|编号|no|num/i.test(k)) || keys[0];
+            const amountField = keys.find(k => /金额|amount|实付|price|总价|sum/i.test(k)) || keys[1];
+            const refundField = keys.find(k => /退款|refund|退货/i.test(k));
+            const timeField = keys.find(k => /时间|date|支付时间|下单时间|created/i.test(k));
+            const statusField = keys.find(k => /状态|status|类型|type/i.test(k));
             
             return data.map(row => {
                 let amount = 0;
@@ -1179,30 +1063,23 @@
                 let refundDays = 0;
                 let time = null;
                 
-                // 解析金额
                 const amountStr = String(row[amountField] || 0).replace(/[¥$,，]/g, '');
                 amount = parseFloat(amountStr) || 0;
                 
-                // 解析退款状态
                 if (refundField) {
                     const refundStr = String(row[refundField] || '');
                     isRefund = /退款|退货|已退|refund/i.test(refundStr);
                 }
-                
                 if (statusField) {
                     const statusStr = String(row[statusField] || '');
-                    if (/退款|退货|已退|closed|cancel|refund/i.test(statusStr)) {
-                        isRefund = true;
-                    }
+                    if (/退款|退货|已退|closed|cancel|refund/i.test(statusStr)) isRefund = true;
                 }
                 
-                // 解析时间
                 if (timeField) {
                     const timeStr = row[timeField];
                     if (timeStr) {
                         time = new Date(timeStr);
                         if (isNaN(time.getTime())) {
-                            // 尝试Excel日期数字
                             if (typeof timeStr === 'number') {
                                 time = new Date((timeStr - 25569) * 86400 * 1000);
                             } else {
@@ -1212,9 +1089,8 @@
                     }
                 }
                 
-                // 计算退款天数（如果有退款时间字段）
                 if (isRefund && timeField) {
-                    const refundTimeField = keys.find(k => /退款时间|退款日期|refund.*time/i.test(k));
+                    const refundTimeField = keys.find(k => /退款时间|退款日期/i.test(k));
                     if (refundTimeField && row[refundTimeField]) {
                         const refundTime = new Date(row[refundTimeField]);
                         if (!isNaN(refundTime.getTime()) && time && !isNaN(time.getTime())) {
@@ -1223,35 +1099,43 @@
                     }
                 }
                 
-                return {
-                    orderNo: row[orderNoField],
-                    amount: amount,
-                    isRefund: isRefund,
-                    refundDays: refundDays,
-                    time: time,
-                    raw: row
+                const dateStr = time && !isNaN(time.getTime()) ? time.toISOString().split('T')[0] : null;
+                
+                return { 
+                    orderNo: row[orderNoField], 
+                    amount, 
+                    isRefund, 
+                    refundDays, 
+                    time, 
+                    date: dateStr,
+                    anchor: matchAnchor(time, dateStr), 
+                    raw: row 
                 };
             });
         }
         
-        // 解析值班表数据
-        function parseShiftData(data) {
-            if (!data || data.length === 0) return [];
+        function matchAnchor(time, dateStr) {
+            if (!time || isNaN(time.getTime())) return '非直播时段';
             
-            const firstRow = data[0];
-            const keys = Object.keys(firstRow);
+            const schedule = getScheduleForDate(dateStr);
+            const orderMinutes = time.getHours() * 60 + time.getMinutes();
             
-            let dateField, periodField, anchorField;
-            
-            dateField = keys.find(k => /日期|date|时间/i.test(k));
-            periodField = keys.find(k => /时段|period|班次|shift|time/i.test(k));
-            anchorField = keys.find(k => /主播|anchor|主播名|name/i.test(k));
-            
-            return data.map(row => ({
-                date: row[dateField],
-                period: row[periodField],
-                anchor: row[anchorField]
-            }));
+            for (const shift of schedule) {
+                let startMinutes = shift.startHour * 60 + shift.startMinute;
+                let endMinutes = shift.endHour * 60 + shift.endMinute;
+                
+                // 处理跨天情况（如20:30-01:00）
+                if (endMinutes < startMinutes) {
+                    if (orderMinutes >= startMinutes || orderMinutes <= endMinutes) {
+                        return shift.name || '未知主播';
+                    }
+                } else {
+                    if (orderMinutes >= startMinutes && orderMinutes <= endMinutes) {
+                        return shift.name || '未知主播';
+                    }
+                }
+            }
+            return '非直播时段';
         }
         
         function showLoading() {
@@ -1259,9 +1143,7 @@
             document.getElementById('loadingStatus').classList.remove('hidden');
         }
         
-        function hideLoading() {
-            document.getElementById('loadingStatus').classList.add('hidden');
-        }
+        function hideLoading() { document.getElementById('loadingStatus').classList.add('hidden'); }
         
         function resetAnalysis() {
             document.getElementById('dataStatus').classList.remove('hidden');
@@ -1269,254 +1151,123 @@
             document.getElementById('analysisTabs').classList.add('hidden');
             document.getElementById('chartArea').classList.add('hidden');
             
-            // 销毁所有图表
-            if (overviewChart) { overviewChart.dispose(); overviewChart = null; }
-            if (hourlyChart) { hourlyChart.dispose(); hourlyChart = null; }
-            if (weekdayChart) { weekdayChart.dispose(); weekdayChart = null; }
-            if (dailyChart) { dailyChart.dispose(); dailyChart = null; }
-            if (anchorChart) { anchorChart.dispose(); anchorChart = null; }
-            if (refundCurveChart) { refundCurveChart.dispose(); refundCurveChart = null; }
+            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart].forEach(c => {
+                if (c) c.dispose();
+            });
+            overviewChart = hourlyChart = weekdayChart = dailyChart = anchorChart = refundCurveChart = null;
         }
         
-        // 数据分析主函数
         function analyzeData() {
             hideLoading();
+            if (parsedOrders.length === 0) { resetAnalysis(); return; }
             
-            if (parsedOrders.length === 0) {
-                resetAnalysis();
-                return;
-            }
+            parsedOrders.forEach(order => { 
+                order.anchor = matchAnchor(order.time, order.date); 
+            });
             
-            // 计算统计数据
             const totalOrders = parsedOrders.length;
             const refundOrders = parsedOrders.filter(o => o.isRefund).length;
             const refundRate = totalOrders > 0 ? (refundOrders / totalOrders * 100) : 0;
-            const totalAmount = parsedOrders.reduce((sum, o) => sum + (o.isRefund ? 0 : o.amount), 0);
             const refundAmount = parsedOrders.filter(o => o.isRefund).reduce((sum, o) => sum + o.amount, 0);
             
-            // 获取日期范围
-            const dates = parsedOrders.filter(o => o.time).map(o => o.time.toISOString().split('T')[0]);
-            const uniqueDates = [...new Set(dates)];
-            const days = uniqueDates.length || 1;
-            const avgDailyRefund = refundAmount / days;
+            const dates = parsedOrders.filter(o => o.date).map(o => o.date);
+            const days = [...new Set(dates)].length || 1;
             
-            // 更新指标卡片
             document.getElementById('totalOrders').textContent = totalOrders;
             document.getElementById('refundRateDisplay').textContent = refundRate.toFixed(1) + '%';
             document.getElementById('refundAmount').textContent = '¥' + refundAmount.toFixed(0);
-            document.getElementById('avgDailyRefund').textContent = '¥' + avgDailyRefund.toFixed(0);
+            document.getElementById('avgDailyRefund').textContent = '¥' + (refundAmount / days).toFixed(0);
             
-            // 显示分析区域
             document.getElementById('metricsCards').classList.remove('hidden');
             document.getElementById('analysisTabs').classList.remove('hidden');
             document.getElementById('chartArea').classList.remove('hidden');
             
-            // 默认显示退款总览
             switchTab('overview');
         }
         
-        // 切换标签页
         function switchTab(tab) {
-            // 更新按钮状态
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            // 隐藏所有图表
-            document.getElementById('overviewChart').classList.add('hidden');
-            document.getElementById('hourlyChart').classList.add('hidden');
-            document.getElementById('weekdayChart').classList.add('hidden');
-            document.getElementById('dailyChart').classList.add('hidden');
-            document.getElementById('anchorChart').classList.add('hidden');
-            document.getElementById('refundCurveChart').classList.add('hidden');
+            ['overviewChart', 'hourlyChart', 'weekdayChart', 'dailyChart', 'anchorChart', 'refundCurveChart'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
             
-            // 显示对应图表
             switch(tab) {
-                case 'overview':
-                    document.getElementById('overviewChart').classList.remove('hidden');
-                    renderOverviewChart();
-                    break;
-                case 'hourly':
-                    document.getElementById('hourlyChart').classList.remove('hidden');
-                    renderHourlyChart();
-                    break;
-                case 'weekday':
-                    document.getElementById('weekdayChart').classList.remove('hidden');
-                    renderWeekdayChart();
-                    break;
-                case 'daily':
-                    document.getElementById('dailyChart').classList.remove('hidden');
-                    renderDailyChart();
-                    break;
-                case 'anchor':
-                    document.getElementById('anchorChart').classList.remove('hidden');
-                    renderAnchorChart();
-                    break;
-                case 'refundCurve':
-                    document.getElementById('refundCurveChart').classList.remove('hidden');
-                    renderRefundCurveChart();
-                    break;
+                case 'overview': document.getElementById('overviewChart').classList.remove('hidden'); renderOverviewChart(); break;
+                case 'hourly': document.getElementById('hourlyChart').classList.remove('hidden'); renderHourlyChart(); break;
+                case 'weekday': document.getElementById('weekdayChart').classList.remove('hidden'); renderWeekdayChart(); break;
+                case 'daily': document.getElementById('dailyChart').classList.remove('hidden'); renderDailyChart(); break;
+                case 'anchor': document.getElementById('anchorChart').classList.remove('hidden'); renderAnchorChart(); break;
+                case 'refundCurve': document.getElementById('refundCurveChart').classList.remove('hidden'); renderRefundCurveChart(); break;
             }
         }
         
-        // 渲染退款总览图表
         function renderOverviewChart() {
             const container = document.getElementById('overviewChartInner');
             if (!container) return;
-            
-            if (overviewChart) {
-                overviewChart.dispose();
-            }
-            
+            if (overviewChart) overviewChart.dispose();
             overviewChart = echarts.init(container);
             
-            const totalOrders = parsedOrders.length;
             const refundOrders = parsedOrders.filter(o => o.isRefund).length;
-            const validOrders = totalOrders - refundOrders;
-            const refundAmount = parsedOrders.filter(o => o.isRefund).reduce((sum, o) => sum + o.amount, 0);
-            const validAmount = parsedOrders.filter(o => !o.isRefund).reduce((sum, o) => sum + o.amount, 0);
-            
-            const option = {
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{b}: {c} ({d}%)'
-                },
-                legend: {
-                    orient: 'vertical',
-                    right: 10,
-                    top: 'center',
-                    textStyle: { color: '#666' }
-                },
-                series: [
-                    {
-                        name: '订单数',
-                        type: 'pie',
-                        radius: ['40%', '70%'],
-                        center: ['35%', '50%'],
-                        avoidLabelOverlap: false,
-                        label: {
-                            show: false,
-                            position: 'center'
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                fontSize: 14,
-                                fontWeight: 'bold'
-                            }
-                        },
-                        labelLine: {
-                            show: false
-                        },
-                        data: [
-                            { value: validOrders, name: '有效订单', itemStyle: { color: '#10b981' } },
-                            { value: refundOrders, name: '退款订单', itemStyle: { color: '#ef4444' } }
-                        ]
-                    }
-                ]
-            };
-            
-            overviewChart.setOption(option);
+            overviewChart.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#666' } },
+                series: [{
+                    type: 'pie', radius: ['40%', '70%'], center: ['35%', '50%'],
+                    label: { show: false },
+                    emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                    data: [
+                        { value: parsedOrders.length - refundOrders, name: '有效订单', itemStyle: { color: '#10b981' } },
+                        { value: refundOrders, name: '退款订单', itemStyle: { color: '#ef4444' } }
+                    ]
+                }]
+            });
         }
         
-        // 渲染时段分析图表
         function renderHourlyChart() {
             const container = document.getElementById('hourlyChartInner');
             if (!container) return;
-            
-            if (hourlyChart) {
-                hourlyChart.dispose();
-            }
-            
+            if (hourlyChart) hourlyChart.dispose();
             hourlyChart = echarts.init(container);
             
-            // 按小时统计退款
             const hourlyData = {};
-            for (let i = 0; i < 24; i++) {
-                hourlyData[i] = { total: 0, refund: 0 };
-            }
+            for (let i = 0; i < 24; i++) hourlyData[i] = { total: 0, refund: 0 };
             
             parsedOrders.forEach(order => {
                 if (order.time && !isNaN(order.time.getTime())) {
                     const hour = order.time.getHours();
                     hourlyData[hour].total++;
-                    if (order.isRefund) {
-                        hourlyData[hour].refund++;
-                    }
+                    if (order.isRefund) hourlyData[hour].refund++;
                 }
             });
             
-            const hours = [];
-            const refundCounts = [];
-            const refundRates = [];
-            
+            const hours = [], refundCounts = [], refundRates = [];
             for (let i = 0; i < 24; i++) {
                 hours.push(i + '时');
                 refundCounts.push(hourlyData[i].refund);
-                const rate = hourlyData[i].total > 0 ? (hourlyData[i].refund / hourlyData[i].total * 100) : 0;
-                refundRates.push(rate.toFixed(1));
+                refundRates.push(hourlyData[i].total > 0 ? (hourlyData[i].refund / hourlyData[i].total * 100).toFixed(1) : 0);
             }
             
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: { type: 'shadow' }
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: hours,
-                    axisLabel: { 
-                        color: '#666',
-                        interval: 2
-                    }
-                },
+            hourlyChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: hours, axisLabel: { color: '#666', interval: 2 } },
                 yAxis: [
-                    {
-                        type: 'value',
-                        name: '退款数',
-                        axisLabel: { color: '#666' }
-                    },
-                    {
-                        type: 'value',
-                        name: '退款率%',
-                        axisLabel: { color: '#666' }
-                    }
+                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
+                    { type: 'value', name: '退款率%', axisLabel: { color: '#666' } }
                 ],
                 series: [
-                    {
-                        name: '退款数',
-                        type: 'bar',
-                        data: refundCounts,
-                        itemStyle: { color: '#ef4444' }
-                    },
-                    {
-                        name: '退款率',
-                        type: 'line',
-                        yAxisIndex: 1,
-                        data: refundRates,
-                        itemStyle: { color: '#f59e0b' },
-                        smooth: true
-                    }
+                    { name: '退款数', type: 'bar', data: refundCounts, itemStyle: { color: '#ef4444' } },
+                    { name: '退款率', type: 'line', yAxisIndex: 1, data: refundRates, itemStyle: { color: '#f59e0b' }, smooth: true }
                 ]
-            };
-            
-            hourlyChart.setOption(option);
+            });
         }
         
-        // 渲染星期分析图表
         function renderWeekdayChart() {
             const container = document.getElementById('weekdayChartInner');
             if (!container) return;
-            
-            if (weekdayChart) {
-                weekdayChart.dispose();
-            }
-            
+            if (weekdayChart) weekdayChart.dispose();
             weekdayChart = echarts.init(container);
             
             const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -1526,386 +1277,142 @@
                 if (order.time && !isNaN(order.time.getTime())) {
                     const day = order.time.getDay();
                     weekdayData[day].total++;
-                    if (order.isRefund) {
-                        weekdayData[day].refund++;
-                    }
+                    if (order.isRefund) weekdayData[day].refund++;
                 }
             });
             
-            const refundRates = weekdayData.map(d => {
-                return d.total > 0 ? (d.refund / d.total * 100).toFixed(1) : 0;
-            });
-            
-            const refundCounts = weekdayData.map(d => d.refund);
-            
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: { type: 'shadow' }
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: weekdays,
-                    axisLabel: { color: '#666' }
-                },
+            weekdayChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: weekdays, axisLabel: { color: '#666' } },
                 yAxis: [
-                    {
-                        type: 'value',
-                        name: '退款数',
-                        axisLabel: { color: '#666' }
-                    },
-                    {
-                        type: 'value',
-                        name: '退款率%',
-                        axisLabel: { color: '#666' }
-                    }
+                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
+                    { type: 'value', name: '退款率%', axisLabel: { color: '#666' } }
                 ],
                 series: [
-                    {
-                        name: '退款数',
-                        type: 'bar',
-                        data: refundCounts,
-                        itemStyle: { color: '#ef4444' }
-                    },
-                    {
-                        name: '退款率',
-                        type: 'line',
-                        yAxisIndex: 1,
-                        data: refundRates,
-                        itemStyle: { color: '#f59e0b' },
-                        smooth: true
-                    }
+                    { name: '退款数', type: 'bar', data: weekdayData.map(d => d.refund), itemStyle: { color: '#ef4444' } },
+                    { name: '退款率', type: 'line', yAxisIndex: 1, data: weekdayData.map(d => d.total > 0 ? (d.refund / d.total * 100).toFixed(1) : 0), itemStyle: { color: '#f59e0b' }, smooth: true }
                 ]
-            };
-            
-            weekdayChart.setOption(option);
+            });
         }
         
-        // 渲染日趋势图表
         function renderDailyChart() {
             const container = document.getElementById('dailyChartInner');
             if (!container) return;
-            
-            if (dailyChart) {
-                dailyChart.dispose();
-            }
-            
+            if (dailyChart) dailyChart.dispose();
             dailyChart = echarts.init(container);
             
-            // 按日期统计
             const dailyData = {};
             parsedOrders.forEach(order => {
-                if (order.time && !isNaN(order.time.getTime())) {
-                    const date = order.time.toISOString().split('T')[0];
-                    if (!dailyData[date]) {
-                        dailyData[date] = { total: 0, refund: 0 };
-                    }
-                    dailyData[date].total++;
-                    if (order.isRefund) {
-                        dailyData[date].refund++;
-                    }
+                if (order.date) {
+                    if (!dailyData[order.date]) dailyData[order.date] = { total: 0, refund: 0 };
+                    dailyData[order.date].total++;
+                    if (order.isRefund) dailyData[order.date].refund++;
                 }
             });
             
             const sortedDates = Object.keys(dailyData).sort();
-            const dates = sortedDates.map(d => d.slice(5)); // 去掉年份显示MM-DD
-            const refundRates = sortedDates.map(d => {
-                const rate = dailyData[d].total > 0 ? (dailyData[d].refund / dailyData[d].total * 100) : 0;
-                return rate.toFixed(1);
-            });
-            const refundCounts = sortedDates.map(d => dailyData[d].refund);
+            const dates = sortedDates.map(d => d.slice(5));
             
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: { type: 'cross' }
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: dates,
-                    axisLabel: { 
-                        color: '#666',
-                        rotate: 45
-                    }
-                },
+            dailyChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: dates, axisLabel: { color: '#666', rotate: 45 } },
                 yAxis: [
-                    {
-                        type: 'value',
-                        name: '退款数',
-                        axisLabel: { color: '#666' }
-                    },
-                    {
-                        type: 'value',
-                        name: '退款率%',
-                        max: 100,
-                        axisLabel: { color: '#666' }
-                    }
+                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
+                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' } }
                 ],
                 series: [
-                    {
-                        name: '退款数',
-                        type: 'bar',
-                        data: refundCounts,
-                        itemStyle: { color: '#ef4444' }
-                    },
-                    {
-                        name: '退款率',
-                        type: 'line',
-                        yAxisIndex: 1,
-                        data: refundRates,
-                        itemStyle: { color: '#667eea' },
-                        smooth: true
-                    }
+                    { name: '退款数', type: 'bar', data: sortedDates.map(d => dailyData[d].refund), itemStyle: { color: '#ef4444' } },
+                    { name: '退款率', type: 'line', yAxisIndex: 1, data: sortedDates.map(d => dailyData[d].total > 0 ? (dailyData[d].refund / dailyData[d].total * 100).toFixed(1) : 0), itemStyle: { color: '#667eea' }, smooth: true }
                 ]
-            };
-            
-            dailyChart.setOption(option);
+            });
         }
         
-        // 渲染主播分析图表
         function renderAnchorChart() {
             const container = document.getElementById('anchorChartInner');
             if (!container) return;
-            
-            if (anchorChart) {
-                anchorChart.dispose();
-            }
-            
+            if (anchorChart) anchorChart.dispose();
             anchorChart = echarts.init(container);
             
-            // 按主播统计（需要通过值班表关联）
             const anchorData = {};
-            
-            // 如果有值班表数据，尝试关联
-            if (parsedShifts.length > 0) {
-                parsedOrders.forEach(order => {
-                    if (order.time) {
-                        const orderDate = order.time.toISOString().split('T')[0];
-                        const orderHour = order.time.getHours();
-                        
-                        // 查找对应时段的主播
-                        const shift = parsedShifts.find(s => {
-                            if (!s.date) return false;
-                            const shiftDate = new Date(s.date).toISOString().split('T')[0];
-                            return shiftDate === orderDate;
-                        });
-                        
-                        if (shift && shift.anchor) {
-                            const anchorName = shift.anchor;
-                            if (!anchorData[anchorName]) {
-                                anchorData[anchorName] = { total: 0, refund: 0 };
-                            }
-                            anchorData[anchorName].total++;
-                            if (order.isRefund) {
-                                anchorData[anchorName].refund++;
-                            }
-                        }
-                    }
-                });
-            } else {
-                // 没有值班表，显示提示
-                const option = {
-                    title: {
-                        text: '请上传主播值班表以查看主播分析',
-                        left: 'center',
-                        top: 'center',
-                        textStyle: {
-                            color: '#999',
-                            fontSize: 14
-                        }
-                    }
-                };
-                anchorChart.setOption(option);
-                return;
-            }
-            
-            const anchors = Object.keys(anchorData);
-            if (anchors.length === 0) {
-                const option = {
-                    title: {
-                        text: '未能识别主播数据',
-                        left: 'center',
-                        top: 'center',
-                        textStyle: {
-                            color: '#999',
-                            fontSize: 14
-                        }
-                    }
-                };
-                anchorChart.setOption(option);
-                return;
-            }
-            
-            const refundRates = anchors.map(a => {
-                const rate = anchorData[a].total > 0 ? (anchorData[a].refund / anchorData[a].total * 100) : 0;
-                return rate.toFixed(1);
+            parsedOrders.forEach(order => {
+                const name = order.anchor || '非直播时段';
+                if (!anchorData[name]) anchorData[name] = { total: 0, refund: 0 };
+                anchorData[name].total++;
+                if (order.isRefund) anchorData[name].refund++;
             });
-            const refundCounts = anchors.map(a => anchorData[a].refund);
             
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: { type: 'shadow' }
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: anchors,
-                    axisLabel: { color: '#666' }
-                },
+            const anchors = Object.keys(anchorData).sort();
+            if (anchors.length === 0) {
+                anchorChart.setOption({ title: { text: '暂无主播数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } } });
+                return;
+            }
+            
+            anchorChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: anchors, axisLabel: { color: '#666' } },
                 yAxis: [
-                    {
-                        type: 'value',
-                        name: '退款数',
-                        axisLabel: { color: '#666' }
-                    },
-                    {
-                        type: 'value',
-                        name: '退款率%',
-                        axisLabel: { color: '#666' }
-                    }
+                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
+                    { type: 'value', name: '退款率%', axisLabel: { color: '#666' } }
                 ],
                 series: [
-                    {
-                        name: '退款数',
-                        type: 'bar',
-                        data: refundCounts,
-                        itemStyle: { color: '#ef4444' }
-                    },
-                    {
-                        name: '退款率',
-                        type: 'line',
-                        yAxisIndex: 1,
-                        data: refundRates,
-                        itemStyle: { color: '#f59e0b' },
-                        smooth: true
-                    }
+                    { name: '退款数', type: 'bar', data: anchors.map(a => anchorData[a].refund), itemStyle: { color: '#ef4444' } },
+                    { name: '退款率', type: 'line', yAxisIndex: 1, data: anchors.map(a => anchorData[a].total > 0 ? (anchorData[a].refund / anchorData[a].total * 100).toFixed(1) : 0), itemStyle: { color: '#f59e0b' }, smooth: true }
                 ]
-            };
-            
-            anchorChart.setOption(option);
+            });
         }
         
-        // 渲染7天退款曲线图表
         function renderRefundCurveChart() {
             const container = document.getElementById('refundCurveChartInner');
             if (!container) return;
-            
-            if (refundCurveChart) {
-                refundCurveChart.dispose();
-            }
-            
+            if (refundCurveChart) refundCurveChart.dispose();
             refundCurveChart = echarts.init(container);
             
-            // 统计退款天数分布
             const daysDistribution = {};
-            for (let i = 0; i <= 30; i++) {
-                daysDistribution[i] = 0;
-            }
+            for (let i = 0; i <= 30; i++) daysDistribution[i] = 0;
             
             let validRefundCount = 0;
             parsedOrders.forEach(order => {
-                if (order.isRefund && order.refundDays > 0) {
-                    if (order.refundDays <= 30) {
-                        daysDistribution[order.refundDays]++;
-                        validRefundCount++;
-                    }
+                if (order.isRefund && order.refundDays > 0 && order.refundDays <= 30) {
+                    daysDistribution[order.refundDays]++;
+                    validRefundCount++;
                 }
             });
             
-            // 只显示有数据的区间
-            const days = [];
-            const counts = [];
+            const days = [], counts = [];
             for (let i = 0; i <= 30; i++) {
-                if (daysDistribution[i] > 0 || (i <= 7)) {
+                if (daysDistribution[i] > 0 || i <= 7) {
                     days.push(i + '天');
                     counts.push(daysDistribution[i]);
                 }
             }
             
             if (validRefundCount === 0) {
-                const option = {
-                    title: {
-                        text: '退款时间数据不足\n（需要退款时间字段）',
-                        left: 'center',
-                        top: 'center',
-                        textStyle: {
-                            color: '#999',
-                            fontSize: 14
-                        },
-                        textAlign: 'center'
-                    }
-                };
-                refundCurveChart.setOption(option);
+                refundCurveChart.setOption({ title: { text: '退款时间数据不足', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 }, textAlign: 'center' } });
                 return;
             }
             
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: { type: 'shadow' },
-                    formatter: '{b}: {c} 笔退款'
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: days,
-                    axisLabel: { color: '#666' }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '退款笔数',
-                    axisLabel: { color: '#666' }
-                },
+            refundCurveChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c} 笔退款' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: days, axisLabel: { color: '#666' } },
+                yAxis: { type: 'value', name: '退款笔数', axisLabel: { color: '#666' } },
                 series: [{
-                    name: '退款笔数',
-                    type: 'bar',
-                    data: counts,
-                    itemStyle: {
-                        color: function(params) {
-                            const idx = params.dataIndex;
-                            if (idx <= 1) return '#10b981'; // 0-1天 绿色
-                            if (idx <= 3) return '#f59e0b'; // 2-3天 黄色
-                            if (idx <= 7) return '#ef4444';  // 4-7天 红色
-                            return '#6b7280'; // 7天后 灰色
-                        }
-                    }
+                    type: 'bar', data: counts,
+                    itemStyle: { color: function(p) {
+                        if (p.dataIndex <= 1) return '#10b981';
+                        if (p.dataIndex <= 3) return '#f59e0b';
+                        if (p.dataIndex <= 7) return '#ef4444';
+                        return '#6b7280';
+                    }}
                 }]
-            };
-            
-            refundCurveChart.setOption(option);
+            });
         }
         
-        // 窗口调整时重绘图表
-        window.addEventListener('resize', function() {
-            if (overviewChart) overviewChart.resize();
-            if (hourlyChart) hourlyChart.resize();
-            if (weekdayChart) weekdayChart.resize();
-            if (dailyChart) dailyChart.resize();
-            if (anchorChart) anchorChart.resize();
-            if (refundCurveChart) refundCurveChart.resize();
+        window.addEventListener('resize', () => {
+            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart].forEach(c => { if (c) c.resize(); });
         });
     </script>
 </body>
