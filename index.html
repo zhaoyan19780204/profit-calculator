@@ -1065,28 +1065,57 @@
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    let workbook;
+                    let jsonData;
                     
-                    // 尝试用array方式解析
-                    try {
-                        workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    } catch(e1) {
-                        // 回退：尝试binary方式
+                    if (ext === '.csv') {
+                        // CSV专用解析：先尝试UTF-8，失败则尝试GBK解码
+                        let csvText = '';
                         try {
-                            const binaryStr = e.target.result;
-                            workbook = XLSX.read(binaryStr, { type: 'binary', cellDates: true });
-                        } catch(e2) {
-                            // 回退：尝试base64方式
-                            const base64 = btoa(String.fromCharCode.apply(null, data));
-                            workbook = XLSX.read(base64, { type: 'base64', cellDates: true });
+                            const decoder = new TextDecoder('utf-8');
+                            csvText = decoder.decode(data);
+                            // 检测乱码（如果出现大量替换字符，说明不是UTF-8）
+                            if (csvText.includes('\uFFFD') || (csvText.length > 0 && /[\x80-\xFF]{3,}/.test(csvText.substring(0, 500)))) {
+                                throw new Error('可能非UTF-8编码');
+                            }
+                        } catch(utfErr) {
+                            // 尝试GBK解码
+                            try {
+                                const decoder = new TextDecoder('gbk');
+                                csvText = decoder.decode(data);
+                            } catch(gbkErr) {
+                                // 最终回退：用XLSX库解析
+                                csvText = null;
+                            }
                         }
+                        
+                        if (csvText) {
+                            // 手动解析CSV（处理引号、逗号、换行等）
+                            jsonData = parseCSVText(csvText);
+                        } else {
+                            // 用XLSX库回退解析CSV
+                            const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
+                            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                            jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                        }
+                    } else {
+                        // Excel文件解析
+                        let workbook;
+                        try {
+                            workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
+                        } catch(e1) {
+                            try {
+                                workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
+                            } catch(e2) {
+                                const base64 = btoa(String.fromCharCode.apply(null, data));
+                                workbook = XLSX.read(base64, { type: 'base64', cellDates: true, raw: false });
+                            }
+                        }
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
                     }
                     
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
-                    
                     if (!jsonData || jsonData.length === 0) {
-                        alert('Excel文件为空，没有数据行。');
+                        alert('文件为空或没有有效数据行。');
                         hideLoading();
                         return;
                     }
@@ -1099,13 +1128,104 @@
                     
                     analyzeData();
                 } catch (error) {
-                    console.error('解析Excel失败:', error);
-                    alert('解析Excel文件失败: ' + (error.message || error) + '\n\n请确认文件是标准的Excel格式(.xlsx)，不是加密或受保护的文件。');
+                    console.error('解析文件失败:', error);
+                    alert('解析文件失败: ' + (error.message || error) + '\n\n请确认文件格式正确，未被加密或保护。');
                     hideLoading();
                     input.value = '';
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+        
+        // 手动CSV解析（处理引号内的逗号和换行）
+        function parseCSVText(text) {
+            const lines = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (i + 1 < text.length && text[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = false;
+                        }
+                    } else {
+                        current += ch;
+                    }
+                } else {
+                    if (ch === '"') {
+                        inQuotes = true;
+                    } else if (ch === '\n' || ch === '\r') {
+                        if (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n') i++;
+                        lines.push(current);
+                        current = '';
+                    } else {
+                        current += ch;
+                    }
+                }
+            }
+            if (current.trim()) lines.push(current);
+            
+            if (lines.length < 2) return [];
+            
+            // 自动检测分隔符（逗号、制表符、分号）
+            const headerLine = lines[0];
+            let separator = ',';
+            if (headerLine.split('\t').length > headerLine.split(',').length) {
+                separator = '\t';
+            } else if (headerLine.split(';').length > headerLine.split(',').length) {
+                separator = ';';
+            }
+            
+            const headers = splitCSVLine(lines[0], separator);
+            const result = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = splitCSVLine(lines[i], separator);
+                if (values.length === 0 || (values.length === 1 && !values[0].trim())) continue;
+                const row = {};
+                headers.forEach((h, idx) => {
+                    row[h.trim()] = (idx < values.length) ? values[idx].trim() : '';
+                });
+                result.push(row);
+            }
+            return result;
+        }
+        
+        function splitCSVLine(line, sep) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (i + 1 < line.length && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = false;
+                        }
+                    } else {
+                        current += ch;
+                    }
+                } else {
+                    if (ch === '"') {
+                        inQuotes = true;
+                    } else if (ch === sep) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += ch;
+                    }
+                }
+            }
+            result.push(current);
+            return result;
         }
         
         function parseOrderData(data) {
