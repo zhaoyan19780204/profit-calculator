@@ -17,6 +17,11 @@
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
+        /* 确保所有元素不超过容器宽度 */
+        .container, .container * {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -24,6 +29,7 @@
             border-radius: 16px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
+            width: 100%;
         }
         .header {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -33,7 +39,7 @@
         }
         .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
         .header p { font-size: 13px; opacity: 0.9; }
-        .section { padding: 16px; border-bottom: 1px solid #f0f0f0; }
+        .section { padding: 16px; border-bottom: 1px solid #f0f0f0; width: 100%; box-sizing: border-box; }
         .section:last-child { border-bottom: none; }
         .section-title {
             font-size: 15px;
@@ -128,7 +134,7 @@
         .hidden { display: none; }
         
         /* ============ 数据分析样式 ============ */
-        .analysis-section { background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); }
+        .analysis-section { background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); width: 100%; overflow-x: hidden; }
         .upload-area {
             border: 2px dashed #d1d5db;
             border-radius: 10px;
@@ -360,8 +366,8 @@
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
         
-        .sales-analysis-section, .refund-analysis-section { display: none; }
-        .sales-analysis-section.active, .refund-analysis-section.active { display: block; }
+        .sales-analysis-section, .refund-analysis-section { display: none; width: 100%; overflow-x: hidden; }
+        .sales-analysis-section.active, .refund-analysis-section.active { display: block; width: 100%; overflow-x: hidden; }
         
         /* 渠道结构分析样式 */
         .channel-stats-table {
@@ -414,12 +420,16 @@
         /* ============ 手机适配 (640px以下) ============ */
         @media (max-width: 640px) {
             body { padding: 8px; }
-            .container { border-radius: 12px; }
+            .container { border-radius: 12px; width: 100%; max-width: 100%; }
             .header { padding: 16px 12px; }
             .header h1 { font-size: 18px; }
             .header p { font-size: 12px; }
-            .section { padding: 14px 12px; }
+            .section { padding: 14px 12px; width: 100%; }
             .section-title { font-size: 14px; margin-bottom: 12px; }
+            
+            /* 数据分析板块统一宽度 */
+            .analysis-section { width: 100%; max-width: 100%; overflow-x: hidden; padding: 14px 12px; }
+            .sales-analysis-section, .refund-analysis-section { width: 100%; max-width: 100%; overflow-x: hidden; }
             
             /* 卡片2列布局 */
             .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
@@ -441,8 +451,11 @@
             
             /* 图表高度 */
             .chart { height: 220px; }
-            .chart-container { padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+            .chart-container { padding: 10px; margin-bottom: 10px; border-radius: 8px; width: 100%; overflow-x: hidden; }
             .chart-title { font-size: 12px; margin-bottom: 8px; }
+            
+            /* 图表区域 */
+            #salesChartArea, #chartArea { width: 100%; max-width: 100%; overflow-x: hidden; }
             
             /* 表单 */
             .form-group { margin-bottom: 12px; }
