@@ -1234,11 +1234,23 @@
             const firstRow = data[0];
             const keys = Object.keys(firstRow);
             
-            const orderNoField = keys.find(k => /订单|order|编号|no|num/i.test(k)) || keys[0];
-            const amountField = keys.find(k => /金额|amount|实付|price|总价|sum/i.test(k)) || keys[1];
+            // 智能匹配字段名（兼容微信小店、抖音佣金等多种导出格式）
+            // 订单号
+            const orderNoField = keys.find(k => /主订单编号|子订单编号|订单id|订单编号|order/i.test(k)) || keys.find(k => /订单|编号|no|num/i.test(k)) || keys[0];
+            // 金额
+            const amountField = keys.find(k => /订单应付金额|实付|支付金额|商品单价/i.test(k)) || keys.find(k => /金额|amount|price|总价|sum/i.test(k)) || keys[1];
+            // 退款/售后相关
             const refundField = keys.find(k => /退款|refund|退货/i.test(k));
-            const timeField = keys.find(k => /时间|date|支付时间|下单时间|created/i.test(k));
-            const statusField = keys.find(k => /状态|status|类型|type/i.test(k));
+            const afterSaleField = keys.find(k => /售后/i.test(k));
+            const cancelField = keys.find(k => /取消原因/i.test(k));
+            // 时间
+            const payTimeField = keys.find(k => /支付完成时间|付款时间|支付时间/i.test(k));
+            const orderTimeField = keys.find(k => /订单完成时间|下单时间|订单提交时间|created/i.test(k));
+            const timeField = payTimeField || orderTimeField || keys.find(k => /时间|date/i.test(k));
+            // 状态
+            const statusField = keys.find(k => /订单状态|状态|status/i.test(k));
+            // 退款时间
+            const refundTimeField = keys.find(k => /退款时间|退款日期/i.test(k));
             
             return data.map(row => {
                 let amount = 0;
@@ -1246,21 +1258,38 @@
                 let refundDays = 0;
                 let time = null;
                 
-                const amountStr = String(row[amountField] || 0).replace(/[¥$,，]/g, '');
+                // 解析金额
+                const amountStr = String(row[amountField] || 0).replace(/[¥$,，\t]/g, '').trim();
                 amount = parseFloat(amountStr) || 0;
                 
-                if (refundField) {
-                    const refundStr = String(row[refundField] || '');
-                    isRefund = /退款|退货|已退|refund/i.test(refundStr);
-                }
+                // 判断退款（兼容多种格式）
+                // 1. 抖音佣金表：订单状态含"退货退款"
                 if (statusField) {
                     const statusStr = String(row[statusField] || '');
-                    if (/退款|退货|已退|closed|cancel|refund/i.test(statusStr)) isRefund = true;
+                    if (/退货退款|退款|已退|closed|cancel|refund/i.test(statusStr)) isRefund = true;
+                }
+                // 2. 抖音佣金表：有退款字段
+                if (refundField) {
+                    const refundStr = String(row[refundField] || '');
+                    if (/退款|退货|已退|refund/i.test(refundStr)) isRefund = true;
+                }
+                // 3. 微信小店：售后状态含"退款"/"退货"
+                if (afterSaleField && !isRefund) {
+                    const afterSaleStr = String(row[afterSaleField] || '');
+                    if (/退款|退货|已退|refund|退款中|退款成功/i.test(afterSaleStr)) isRefund = true;
+                }
+                // 4. 微信小店：取消原因含"退款"
+                if (cancelField && !isRefund) {
+                    const cancelStr = String(row[cancelField] || '');
+                    if (/退款|退货/i.test(cancelStr)) isRefund = true;
                 }
                 
+                // 解析时间
                 if (timeField) {
-                    const timeStr = row[timeField];
+                    let timeStr = row[timeField];
                     if (timeStr) {
+                        // 清理制表符等
+                        if (typeof timeStr === 'string') timeStr = timeStr.replace(/\t/g, '').trim();
                         time = new Date(timeStr);
                         if (isNaN(time.getTime())) {
                             if (typeof timeStr === 'number') {
@@ -1272,13 +1301,13 @@
                     }
                 }
                 
-                if (isRefund && timeField) {
-                    const refundTimeField = keys.find(k => /退款时间|退款日期/i.test(k));
-                    if (refundTimeField && row[refundTimeField]) {
-                        const refundTime = new Date(row[refundTimeField]);
-                        if (!isNaN(refundTime.getTime()) && time && !isNaN(time.getTime())) {
-                            refundDays = Math.floor((refundTime - time) / (1000 * 60 * 60 * 24));
-                        }
+                // 计算退款天数
+                if (isRefund && refundTimeField && row[refundTimeField]) {
+                    let refundTimeStr = row[refundTimeField];
+                    if (typeof refundTimeStr === 'string') refundTimeStr = refundTimeStr.replace(/\t/g, '').trim();
+                    const refundTime = new Date(refundTimeStr);
+                    if (!isNaN(refundTime.getTime()) && time && !isNaN(time.getTime())) {
+                        refundDays = Math.floor((refundTime - time) / (1000 * 60 * 60 * 24));
                     }
                 }
                 
