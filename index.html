@@ -562,11 +562,12 @@
             <!-- 上传区域 -->
             <div class="upload-area" onclick="document.getElementById('orderFileInput').click()">
                 <div class="upload-icon">📁</div>
-                <div class="upload-text"><strong>点击上传订单/退款Excel</strong></div>
+                <div class="upload-text"><strong>点击上传订单/退款Excel（支持多文件）</strong></div>
                 <div class="upload-hint">支持 .xlsx, .xls, .csv 格式</div>
-                <input type="file" id="orderFileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleOrderFile(this)">
+                <input type="file" id="orderFileInput" class="file-input" accept=".xlsx,.xls,.csv" multiple onchange="handleOrderFile(this)">
             </div>
             <div id="orderFileInfo" class="uploaded-files"></div>
+            <button id="clearDataBtn" class="add-anchor-btn hidden" onclick="clearAllData()" style="margin-top:8px;padding:10px;">🗑️ 清空数据</button>
             
             <div id="dataStatus" class="empty-state">
                 <div class="icon">📈</div>
@@ -1030,111 +1031,181 @@
         // ==================== 数据分析功能 ====================
         let orderData = null;
         let parsedOrders = [];
+        let uploadedFiles = []; // 存储已上传的文件信息
         
         let overviewChart = null, hourlyChart = null, weekdayChart = null;
         let dailyChart = null, anchorChart = null, refundCurveChart = null;
         
+        // 26%生命线配置
+        const LIFELINE_RATE = 26;
+        const lifelineMarkLine = {
+            symbol: 'none',
+            data: [{ yAxis: LIFELINE_RATE, name: '生命线(26%)' }],
+            lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+            label: { formatter: '生命线 26%', position: 'insideEndTop', color: '#ef4444', fontWeight: 'bold' }
+        };
+        
+        // 红色警示区域配置（超过26%的区域）
+        function getDangerArea() {
+            return {
+                silent: true,
+                show: true,
+                data: [{ yAxis: 100 }],
+                visualMap: {
+                    show: false,
+                    dimension: 1,
+                    pieces: [
+                        { gte: 0, lt: LIFELINE_RATE, color: 'transparent' },
+                        { gte: LIFELINE_RATE, color: 'rgba(239, 68, 68, 0.15)' }
+                    ]
+                }
+            };
+        }
+        
         function handleOrderFile(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            // 文件格式校验
-            const validExts = ['.xlsx', '.xls', '.csv'];
-            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-            if (!validExts.includes(ext)) {
-                alert('不支持的文件格式！请上传 .xlsx、.xls 或 .csv 文件。\n当前文件: ' + file.name);
-                input.value = '';
-                return;
-            }
-            
-            // 文件大小校验（50MB上限）
-            if (file.size > 50 * 1024 * 1024) {
-                alert('文件过大（' + (file.size / 1024 / 1024).toFixed(1) + 'MB），请上传小于50MB的文件。');
-                input.value = '';
-                return;
-            }
+            const files = input.files;
+            if (!files || files.length === 0) return;
             
             showLoading();
             
-            const reader = new FileReader();
-            reader.onerror = function() {
-                alert('文件读取失败，请重试。');
-                hideLoading();
-                input.value = '';
-            };
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    let jsonData;
-                    
-                    if (ext === '.csv') {
-                        // CSV专用解析：先尝试UTF-8，失败则尝试GBK解码
-                        let csvText = '';
-                        try {
-                            const decoder = new TextDecoder('utf-8');
-                            csvText = decoder.decode(data);
-                            // 检测乱码（如果出现大量替换字符，说明不是UTF-8）
-                            if (csvText.includes('\uFFFD') || (csvText.length > 0 && /[\x80-\xFF]{3,}/.test(csvText.substring(0, 500)))) {
-                                throw new Error('可能非UTF-8编码');
-                            }
-                        } catch(utfErr) {
-                            // 尝试GBK解码
-                            try {
-                                const decoder = new TextDecoder('gbk');
-                                csvText = decoder.decode(data);
-                            } catch(gbkErr) {
-                                // 最终回退：用XLSX库解析
-                                csvText = null;
-                            }
-                        }
+            // 逐个处理文件
+            let processedCount = 0;
+            let allJsonData = orderData ? [...orderData] : []; // 保留已有数据
+            let allFileInfos = [...uploadedFiles];
+            
+            Array.from(files).forEach((file, index) => {
+                // 文件格式校验
+                const validExts = ['.xlsx', '.xls', '.csv'];
+                const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                if (!validExts.includes(ext)) {
+                    alert('不支持的文件格式！请上传 .xlsx、.xls 或 .csv 文件。\n当前文件: ' + file.name);
+                    processedCount++;
+                    checkAllProcessed();
+                    return;
+                }
+                
+                // 文件大小校验（50MB上限）
+                if (file.size > 50 * 1024 * 1024) {
+                    alert('文件过大（' + (file.size / 1024 / 1024).toFixed(1) + 'MB），请上传小于50MB的文件。\n文件: ' + file.name);
+                    processedCount++;
+                    checkAllProcessed();
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onerror = function() {
+                    alert('文件读取失败，请重试。\n文件: ' + file.name);
+                    processedCount++;
+                    checkAllProcessed();
+                };
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        let jsonData;
                         
-                        if (csvText) {
-                            // 手动解析CSV（处理引号、逗号、换行等）
-                            jsonData = parseCSVText(csvText);
+                        if (ext === '.csv') {
+                            // CSV专用解析：先尝试UTF-8，失败则尝试GBK解码
+                            let csvText = '';
+                            try {
+                                const decoder = new TextDecoder('utf-8');
+                                csvText = decoder.decode(data);
+                                // 检测乱码（如果出现大量替换字符，说明不是UTF-8）
+                                if (csvText.includes('\uFFFD') || (csvText.length > 0 && /[\x80-\xFF]{3,}/.test(csvText.substring(0, 500)))) {
+                                    throw new Error('可能非UTF-8编码');
+                                }
+                            } catch(utfErr) {
+                                // 尝试GBK解码
+                                try {
+                                    const decoder = new TextDecoder('gbk');
+                                    csvText = decoder.decode(data);
+                                } catch(gbkErr) {
+                                    // 最终回退：用XLSX库解析
+                                    csvText = null;
+                                }
+                            }
+                            
+                            if (csvText) {
+                                // 手动解析CSV（处理引号、逗号、换行等）
+                                jsonData = parseCSVText(csvText);
+                            } else {
+                                // 用XLSX库回退解析CSV
+                                const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
+                                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                                jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                            }
                         } else {
-                            // 用XLSX库回退解析CSV
-                            const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
+                            // Excel文件解析
+                            let workbook;
+                            try {
+                                workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
+                            } catch(e1) {
+                                try {
+                                    workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
+                                } catch(e2) {
+                                    const base64 = btoa(String.fromCharCode.apply(null, data));
+                                    workbook = XLSX.read(base64, { type: 'base64', cellDates: true, raw: false });
+                                }
+                            }
                             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                             jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
                         }
-                    } else {
-                        // Excel文件解析
-                        let workbook;
-                        try {
-                            workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
-                        } catch(e1) {
-                            try {
-                                workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
-                            } catch(e2) {
-                                const base64 = btoa(String.fromCharCode.apply(null, data));
-                                workbook = XLSX.read(base64, { type: 'base64', cellDates: true, raw: false });
-                            }
+                        
+                        if (jsonData && jsonData.length > 0) {
+                            // 合并数据
+                            allJsonData = allJsonData.concat(jsonData);
+                            allFileInfos.push({ name: file.name, count: jsonData.length });
                         }
-                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                    } catch (error) {
+                        console.error('解析文件失败:', error);
+                        alert('解析文件失败: ' + (error.message || error) + '\n\n请确认文件格式正确，未被加密或保护。\n文件: ' + file.name);
                     }
                     
-                    if (!jsonData || jsonData.length === 0) {
-                        alert('文件为空或没有有效数据行。');
-                        hideLoading();
-                        return;
-                    }
-                    
-                    orderData = jsonData;
-                    parsedOrders = parseOrderData(jsonData);
-                    
-                    document.getElementById('orderFileInfo').innerHTML = 
-                        `<span class="file-tag">📄 ${file.name} (${jsonData.length}条数据)</span>`;
-                    
-                    analyzeData();
-                } catch (error) {
-                    console.error('解析文件失败:', error);
-                    alert('解析文件失败: ' + (error.message || error) + '\n\n请确认文件格式正确，未被加密或保护。');
+                    processedCount++;
+                    checkAllProcessed();
+                };
+                reader.readAsArrayBuffer(file);
+            });
+            
+            function checkAllProcessed() {
+                if (processedCount < files.length) return;
+                
+                if (allJsonData.length === 0) {
+                    alert('所有文件为空或没有有效数据行。');
                     hideLoading();
                     input.value = '';
+                    return;
                 }
-            };
-            reader.readAsArrayBuffer(file);
+                
+                // 更新数据
+                orderData = allJsonData;
+                uploadedFiles = allFileInfos;
+                parsedOrders = parseOrderData(orderData);
+                
+                // 显示已上传文件信息
+                document.getElementById('orderFileInfo').innerHTML = uploadedFiles.map(f => 
+                    `<span class="file-tag">📄 ${f.name} (${f.count}条数据)</span>`
+                ).join('');
+                
+                // 显示清空按钮
+                document.getElementById('clearDataBtn').classList.remove('hidden');
+                
+                analyzeData();
+            }
+        }
+        
+        // 清空所有数据
+        function clearAllData() {
+            if (!confirm('确定要清空所有已上传的数据吗？')) return;
+            
+            orderData = null;
+            parsedOrders = [];
+            uploadedFiles = [];
+            
+            document.getElementById('orderFileInfo').innerHTML = '';
+            document.getElementById('clearDataBtn').classList.add('hidden');
+            document.getElementById('orderFileInput').value = '';
+            
+            resetAnalysis();
         }
         
         // 手动CSV解析（处理引号内的逗号和换行）
@@ -1460,25 +1531,65 @@
                 }
             });
             
-            const hours = [], refundCounts = [], refundRates = [];
+            const hours = [], refundRates = [], refundCounts = [];
             for (let i = 0; i < 24; i++) {
                 hours.push(i + '时');
                 refundCounts.push(hourlyData[i].refund);
-                refundRates.push(hourlyData[i].total > 0 ? (hourlyData[i].refund / hourlyData[i].total * 100).toFixed(1) : 0);
+                const rate = hourlyData[i].total > 0 ? (hourlyData[i].refund / hourlyData[i].total * 100).toFixed(1) : 0;
+                refundRates.push(rate);
             }
             
             hourlyChart.setOption({
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'shadow' },
+                    formatter: function(params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(p => {
+                            result += p.marker + ' ' + p.seriesName + ': ' + p.value + (p.seriesName === '退款率' ? '%' : '单') + '<br/>';
+                        });
+                        // 计算该时段退款数
+                        const hourIdx = hours.indexOf(params[0].name);
+                        if (hourIdx >= 0) {
+                            result += '<span style="color:#999;font-size:11px;">退款数: ' + refundCounts[hourIdx] + '单</span>';
+                        }
+                        return result;
+                    }
+                },
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: hours, axisLabel: { color: '#666', interval: 2 } },
                 yAxis: [
-                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
-                    { type: 'value', name: '退款率%', axisLabel: { color: '#666' } }
+                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
-                    { name: '退款数', type: 'bar', data: refundCounts, itemStyle: { color: '#ef4444' } },
-                    { name: '退款率', type: 'line', yAxisIndex: 1, data: refundRates, itemStyle: { color: '#f59e0b' }, smooth: true }
-                ]
+                    { 
+                        name: '退款率', 
+                        type: 'line', 
+                        data: refundRates, 
+                        itemStyle: { color: '#667eea' }, 
+                        smooth: true,
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
+                                { offset: 1, color: 'rgba(102, 126, 234, 0.05)' }
+                            ])
+                        },
+                        markLine: {
+                            symbol: 'none',
+                            data: [{ yAxis: LIFELINE_RATE, name: '生命线(26%)' }],
+                            lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+                            label: { formatter: '生命线 26%', position: 'insideEndTop', color: '#ef4444', fontWeight: 'bold' }
+                        }
+                    }
+                ],
+                visualMap: {
+                    show: false,
+                    dimension: 0,
+                    pieces: refundRates.map((rate, idx) => ({
+                        gte: idx, lt: idx + 1,
+                        color: parseFloat(rate) >= LIFELINE_RATE ? 'rgba(239, 68, 68, 0.7)' : '#667eea'
+                    }))
+                }
             });
         }
         
@@ -1499,17 +1610,48 @@
                 }
             });
             
+            const refundRates = weekdayData.map(d => d.total > 0 ? (d.refund / d.total * 100).toFixed(1) : 0);
+            const refundCounts = weekdayData.map(d => d.refund);
+            
             weekdayChart.setOption({
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'shadow' },
+                    formatter: function(params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(p => {
+                            result += p.marker + ' ' + p.seriesName + ': ' + p.value + (p.seriesName === '退款率' ? '%' : '单') + '<br/>';
+                        });
+                        // 显示退款数
+                        const dayIdx = weekdays.indexOf(params[0].name);
+                        if (dayIdx >= 0) {
+                            result += '<span style="color:#999;font-size:11px;">退款数: ' + refundCounts[dayIdx] + '单</span>';
+                        }
+                        return result;
+                    }
+                },
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: weekdays, axisLabel: { color: '#666' } },
                 yAxis: [
-                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
-                    { type: 'value', name: '退款率%', axisLabel: { color: '#666' } }
+                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
-                    { name: '退款数', type: 'bar', data: weekdayData.map(d => d.refund), itemStyle: { color: '#ef4444' } },
-                    { name: '退款率', type: 'line', yAxisIndex: 1, data: weekdayData.map(d => d.total > 0 ? (d.refund / d.total * 100).toFixed(1) : 0), itemStyle: { color: '#f59e0b' }, smooth: true }
+                    { 
+                        name: '退款率', 
+                        type: 'bar', 
+                        data: refundRates,
+                        itemStyle: { 
+                            color: function(p) {
+                                return parseFloat(p.value) >= LIFELINE_RATE ? '#ef4444' : '#667eea';
+                            }
+                        },
+                        markLine: {
+                            symbol: 'none',
+                            data: [{ yAxis: LIFELINE_RATE, name: '生命线(26%)' }],
+                            lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+                            label: { formatter: '生命线 26%', position: 'insideEndTop', color: '#ef4444', fontWeight: 'bold' }
+                        }
+                    }
                 ]
             });
         }
@@ -1531,19 +1673,59 @@
             
             const sortedDates = Object.keys(dailyData).sort();
             const dates = sortedDates.map(d => d.slice(5));
+            const refundRates = sortedDates.map(d => dailyData[d].total > 0 ? (dailyData[d].refund / dailyData[d].total * 100).toFixed(1) : 0);
+            const refundCounts = sortedDates.map(d => dailyData[d].refund);
             
             dailyChart.setOption({
-                tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'cross' },
+                    formatter: function(params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(p => {
+                            result += p.marker + ' ' + p.seriesName + ': ' + p.value + (p.seriesName === '退款率' ? '%' : '单') + '<br/>';
+                        });
+                        const dateIdx = dates.indexOf(params[0].name);
+                        if (dateIdx >= 0) {
+                            result += '<span style="color:#999;font-size:11px;">退款数: ' + refundCounts[dateIdx] + '单</span>';
+                        }
+                        return result;
+                    }
+                },
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: dates, axisLabel: { color: '#666', rotate: 45 } },
                 yAxis: [
-                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
-                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' } }
+                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
-                    { name: '退款数', type: 'bar', data: sortedDates.map(d => dailyData[d].refund), itemStyle: { color: '#ef4444' } },
-                    { name: '退款率', type: 'line', yAxisIndex: 1, data: sortedDates.map(d => dailyData[d].total > 0 ? (dailyData[d].refund / dailyData[d].total * 100).toFixed(1) : 0), itemStyle: { color: '#667eea' }, smooth: true }
-                ]
+                    { 
+                        name: '退款率', 
+                        type: 'line', 
+                        data: refundRates, 
+                        itemStyle: { color: '#667eea' }, 
+                        smooth: true,
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
+                                { offset: 1, color: 'rgba(102, 126, 234, 0.05)' }
+                            ])
+                        },
+                        markLine: {
+                            symbol: 'none',
+                            data: [{ yAxis: LIFELINE_RATE, name: '生命线(26%)' }],
+                            lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+                            label: { formatter: '生命线 26%', position: 'insideEndTop', color: '#ef4444', fontWeight: 'bold' }
+                        }
+                    }
+                ],
+                visualMap: {
+                    show: false,
+                    dimension: 0,
+                    pieces: refundRates.map((rate, idx) => ({
+                        gte: idx, lt: idx + 1,
+                        color: parseFloat(rate) >= LIFELINE_RATE ? 'rgba(239, 68, 68, 0.7)' : '#667eea'
+                    }))
+                }
             });
         }
         
@@ -1567,17 +1749,47 @@
                 return;
             }
             
+            const refundRates = anchors.map(a => anchorData[a].total > 0 ? (anchorData[a].refund / anchorData[a].total * 100).toFixed(1) : 0);
+            const refundCounts = anchors.map(a => anchorData[a].refund);
+            
             anchorChart.setOption({
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'shadow' },
+                    formatter: function(params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(p => {
+                            result += p.marker + ' ' + p.seriesName + ': ' + p.value + (p.seriesName === '退款率' ? '%' : '单') + '<br/>';
+                        });
+                        const anchorIdx = anchors.indexOf(params[0].name);
+                        if (anchorIdx >= 0) {
+                            result += '<span style="color:#999;font-size:11px;">退款数: ' + refundCounts[anchorIdx] + '单</span>';
+                        }
+                        return result;
+                    }
+                },
                 grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                 xAxis: { type: 'category', data: anchors, axisLabel: { color: '#666' } },
                 yAxis: [
-                    { type: 'value', name: '退款数', axisLabel: { color: '#666' } },
-                    { type: 'value', name: '退款率%', axisLabel: { color: '#666' } }
+                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
                 ],
                 series: [
-                    { name: '退款数', type: 'bar', data: anchors.map(a => anchorData[a].refund), itemStyle: { color: '#ef4444' } },
-                    { name: '退款率', type: 'line', yAxisIndex: 1, data: anchors.map(a => anchorData[a].total > 0 ? (anchorData[a].refund / anchorData[a].total * 100).toFixed(1) : 0), itemStyle: { color: '#f59e0b' }, smooth: true }
+                    { 
+                        name: '退款率', 
+                        type: 'bar', 
+                        data: refundRates,
+                        itemStyle: { 
+                            color: function(p) {
+                                return parseFloat(p.value) >= LIFELINE_RATE ? '#ef4444' : '#667eea';
+                            }
+                        },
+                        markLine: {
+                            symbol: 'none',
+                            data: [{ yAxis: LIFELINE_RATE, name: '生命线(26%)' }],
+                            lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+                            label: { formatter: '生命线 26%', position: 'insideEndTop', color: '#ef4444', fontWeight: 'bold' }
+                        }
+                    }
                 ]
             });
         }
