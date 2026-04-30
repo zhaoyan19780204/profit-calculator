@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>直播带货盈利计算器</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -251,6 +253,233 @@
             display: none;
         }
         
+        /* ============ 数据分析板块样式 ============ */
+        .analysis-section {
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+        }
+        
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .upload-text {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .upload-text strong {
+            color: #667eea;
+        }
+        
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .uploaded-files {
+            margin-top: 12px;
+        }
+        
+        .file-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 4px;
+        }
+        
+        .file-tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .file-tag .remove:hover {
+            color: #f5576c;
+        }
+        
+        /* 指标卡片 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            text-align: center;
+        }
+        
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        }
+        
+        .metric-card.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* 分析标签页 */
+        .tab-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tab-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 300px;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state h3 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e7ff;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 数据表格 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+        
         @media (max-width: 400px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -258,6 +487,10 @@
             
             .price-selector {
                 flex-direction: column;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -543,6 +776,114 @@
             
             <div id="tipsBox" class="tips hidden"></div>
         </div>
+        
+        <!-- ============ 数据分析板块 ============ -->
+        <div class="section analysis-section">
+            <div class="section-title">📊 数据分析</div>
+            
+            <!-- 上传区域 -->
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('orderFileInput').click()">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">
+                    <strong>点击上传订单/退款Excel</strong>
+                </div>
+                <div class="upload-hint">支持 .xlsx, .xls, .csv 格式</div>
+                <input type="file" id="orderFileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleOrderFile(this)">
+            </div>
+            <div id="orderFileInfo" class="uploaded-files"></div>
+            
+            <div class="upload-area" id="shiftUploadArea" onclick="document.getElementById('shiftFileInput').click()" style="margin-top: 12px;">
+                <div class="upload-icon">👤</div>
+                <div class="upload-text">
+                    <strong>点击上传主播值班表</strong>（可选）
+                </div>
+                <div class="upload-hint">包含：日期、时段、主播名</div>
+                <input type="file" id="shiftFileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleShiftFile(this)">
+            </div>
+            <div id="shiftFileInfo" class="uploaded-files"></div>
+            
+            <!-- 数据状态 -->
+            <div id="dataStatus" class="empty-state">
+                <div class="icon">📈</div>
+                <h3>暂无数据</h3>
+                <p>上传Excel文件后自动分析退款数据</p>
+            </div>
+            
+            <!-- 加载状态 -->
+            <div id="loadingStatus" class="loading hidden">
+                <div class="spinner"></div>
+                <div>正在解析数据...</div>
+            </div>
+            
+            <!-- 指标卡片 -->
+            <div id="metricsCards" class="metrics-grid hidden">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalOrders">-</div>
+                    <div class="metric-label">总订单数</div>
+                </div>
+                <div class="metric-card warning">
+                    <div class="metric-value" id="refundRateDisplay">-</div>
+                    <div class="metric-label">退款率</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="refundAmount">-</div>
+                    <div class="metric-label">退款金额</div>
+                </div>
+                <div class="metric-card success">
+                    <div class="metric-value" id="avgDailyRefund">-</div>
+                    <div class="metric-label">日均退款</div>
+                </div>
+            </div>
+            
+            <!-- 分析标签页 -->
+            <div id="analysisTabs" class="tab-buttons hidden">
+                <button class="tab-btn active" onclick="switchTab('overview')">退款总览</button>
+                <button class="tab-btn" onclick="switchTab('hourly')">时段分析</button>
+                <button class="tab-btn" onclick="switchTab('weekday')">星期分析</button>
+                <button class="tab-btn" onclick="switchTab('daily')">日趋势</button>
+                <button class="tab-btn" onclick="switchTab('anchor')">主播分析</button>
+                <button class="tab-btn" onclick="switchTab('refundCurve')">7天退款</button>
+            </div>
+            
+            <!-- 图表区域 -->
+            <div id="chartArea" class="hidden">
+                <!-- 退款总览图表 -->
+                <div id="overviewChart" class="chart-container">
+                    <div class="chart-title">📊 退款结构分析</div>
+                    <div id="overviewChartInner" class="chart"></div>
+                </div>
+                
+                <!-- 时段分析图表 -->
+                <div id="hourlyChart" class="chart-container hidden">
+                    <div class="chart-title">⏰ 24小时退款分布</div>
+                    <div id="hourlyChartInner" class="chart"></div>
+                </div>
+                
+                <!-- 星期分析图表 -->
+                <div id="weekdayChart" class="chart-container hidden">
+                    <div class="chart-title">📅 星期退款对比</div>
+                    <div id="weekdayChartInner" class="chart"></div>
+                </div>
+                
+                <!-- 日趋势图表 -->
+                <div id="dailyChart" class="chart-container hidden">
+                    <div class="chart-title">📈 每日退款率走势</div>
+                    <div id="dailyChartInner" class="chart"></div>
+                </div>
+                
+                <!-- 主播分析图表 -->
+                <div id="anchorChart" class="chart-container hidden">
+                    <div class="chart-title">👤 主播退款率对比</div>
+                    <div id="anchorChartInner" class="chart"></div>
+                </div>
+                
+                <!-- 7天退款曲线图表 -->
+                <div id="refundCurveChart" class="chart-container hidden">
+                    <div class="chart-title">📉 支付后N天退款分布</div>
+                    <div id="refundCurveChartInner" class="chart"></div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -558,7 +899,6 @@
         function updateAdSpend() {
             const dailyOrders = getValue('dailyOrders');
             const roi = getValue('roi');
-            // 投流金额 = 每日销售量 × 客单价 ÷ ROI
             const adSpend = roi > 0 ? (dailyOrders * selectedPrice / roi) : 0;
             document.getElementById('adSpendDisplay').textContent = '¥' + adSpend.toFixed(0);
         }
@@ -576,13 +916,10 @@
         }
         
         function calculate() {
-            // 获取所有参数
             const dailyOrders = getValue('dailyOrders');
             const roiInput = getValue('roi');
-            // 投流金额 = 每日销售量 × 客单价 ÷ ROI
             const adSpend = roiInput > 0 ? (dailyOrders * selectedPrice / roiInput) : 0;
             
-            // 更新显示
             document.getElementById('adSpendDisplay').textContent = '¥' + adSpend.toFixed(0);
             
             const refundRate = getValue('refundRate') / 100;
@@ -600,63 +937,34 @@
             const price3 = getValue('price3');
             const commission3 = getValue('commission3') / 100;
             
-            // 税务参数
             const douyinFeeRate = getValue('douyinFeeRate') / 100;
             const anchorRewardRate = getValue('anchorRewardRate') / 100;
             const companyTaxRate = getValue('companyTaxRate') / 100;
             
-            // 有效订单数（扣除退款）- 仅用于利润计算
             const validOrders = dailyOrders * (1 - refundRate);
-            
-            // 销售收入（扣除退款后的实际收入）
             const salesRevenue = validOrders * selectedPrice;
             
-            // 税务计算
-            // 抖店扣费 = (销售-退货) × 扣费比例
             const douyinFee = salesRevenue * douyinFeeRate;
-            // 主播奖励 = (销售-退货-投流) × 奖励比例
             const anchorReward = Math.max(0, salesRevenue - adSpend) * anchorRewardRate;
-            // 公司缴税 = (销售-退货) × 缴税比例
             const companyTax = salesRevenue * companyTaxRate;
             
-            // 更新税务显示
             document.getElementById('douyinFeeDisplay').textContent = formatMoney(douyinFee);
             document.getElementById('anchorRewardDisplay').textContent = formatMoney(anchorReward);
             document.getElementById('companyTaxDisplay').textContent = formatMoney(companyTax);
             
-            // 产品成本
             const costProduct = validOrders * productCost;
-            
-            // 二转收入（拿分佣部分）
             const revenue2 = validOrders * wechatRate * groupRate * convert2Rate * price2 * commission2;
-            
-            // 三转收入（拿分佣部分）
             const revenue3 = validOrders * wechatRate * groupRate * convert2Rate * convert3Rate * price3 * commission3;
-            
-            // 主播工资
             const costAnchor = anchorWage * dailyHours;
-            
-            // 日均固定成本
             const dailyRent = rentCost / 30;
             const dailyStaff = staffCost / 30;
             
-            // 日利润（扣除税务）
             const dailyProfit = salesRevenue - costProduct - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax + revenue2 + revenue3;
-            
-            // 月利润
             const monthlyProfit = dailyProfit * 30;
             
-            // 盈亏平衡分析
-            // 计算每日固定成本
             const fixedDailyCost = costAnchor + dailyRent + dailyStaff;
-            
-            // 税务成本率（每元销售额需扣除的税务）
             const taxRate = douyinFeeRate + anchorRewardRate + companyTaxRate;
-            
-            // 单件毛利（不含私域转化，扣除税务）
             const unitMargin = selectedPrice * (1 - taxRate) - productCost;
-            
-            // 计算保本销量（考虑私域转化的平均贡献）
             const avgPrivateRevenue = (revenue2 + revenue3) / Math.max(validOrders, 1);
             const effectiveMargin = unitMargin + avgPrivateRevenue;
             
@@ -665,8 +973,6 @@
                 breakevenOrders = Math.ceil((fixedDailyCost + adSpend) / effectiveMargin);
             }
             
-            // 退款率上限（ROI=2时，不亏钱的最大退款率）
-            // 利润 = N×P×(1-r)×(1-税务率) - N×c×(1-r) - N×P÷2 + 私域收入 - 固定成本 = 0
             let maxRefundRate = 0;
             const denominator = dailyOrders * (selectedPrice * (1 - taxRate) - productCost);
             if (denominator > 0) {
@@ -675,8 +981,6 @@
                 maxRefundRate = Math.max(0, Math.min(100, maxRefundRate * 100));
             }
             
-            // ROI下限（退款率=27%时，不亏钱的最小ROI）
-            // 利润 = N×P×0.73×(1-税务率) - N×c×0.73 - N×P÷y + 私域收入 - 固定成本 = 0
             let minROI = 0;
             const roiDenominator = dailyOrders * (selectedPrice * (1 - taxRate) - productCost) * 0.73 + (revenue2 + revenue3) - fixedDailyCost;
             if (roiDenominator > 0) {
@@ -684,7 +988,6 @@
                 minROI = Math.max(0, minROI);
             }
             
-            // 显示结果
             document.getElementById('resultSection').classList.remove('hidden');
             
             const dailyProfitEl = document.getElementById('dailyProfit');
@@ -699,15 +1002,12 @@
             document.getElementById('maxRefundRate').textContent = maxRefundRate.toFixed(1) + '%';
             document.getElementById('minROI').textContent = minROI.toFixed(2);
             
-            // 收入构成（月）
-            // 销售毛收入 = 销售 - 退费 = 有效订单数 × 客单价 × 30
             const salesGrossIncome = salesRevenue * 30;
             
             document.getElementById('salesGrossIncome').textContent = formatMoney(salesGrossIncome);
             document.getElementById('revenue2Display').textContent = formatMoney(revenue2 * 30);
             document.getElementById('revenue3Display').textContent = formatMoney(revenue3 * 30);
             
-            // 盈利构成（月）
             const frontProfitVal = validOrders * selectedPrice - validOrders * productCost - adSpend - costAnchor - dailyRent - dailyStaff - douyinFee - anchorReward - companyTax;
             const dailyProfitNew = frontProfitVal + revenue2 + revenue3;
             const monthlyProfitNew = dailyProfitNew * 30;
@@ -717,8 +1017,6 @@
             document.getElementById('secondProfitMonth').textContent = formatMoney(revenue2 * 30);
             document.getElementById('thirdProfitMonth').textContent = formatMoney(revenue3 * 30);
             
-            // 成本构成（月）
-            // 分母 = 销售毛收入（月）- 月投流总和
             const totalRevenue = salesGrossIncome - adSpend * 30;
             
             function formatWithPercent(value, total) {
@@ -735,7 +1033,6 @@
             document.getElementById('staffMonth').textContent = formatWithPercent(staffCost, totalRevenue);
             document.getElementById('bossIncome').textContent = formatWithPercent(monthlyProfitNew, totalRevenue);
             
-            // 提示信息
             const tipsBox = document.getElementById('tipsBox');
             if (dailyProfit < 0) {
                 tipsBox.classList.remove('hidden');
@@ -750,15 +1047,866 @@
                 tipsBox.classList.add('hidden');
             }
             
-            // 滚动到结果区域
             document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
         }
         
-        // 页面加载时自动计算一次
         window.onload = function() {
             updateAdSpend();
             calculate();
         };
+        
+        // ==================== 数据分析功能 ====================
+        
+        // 全局变量存储解析后的数据
+        let orderData = null;
+        let shiftData = null;
+        let parsedOrders = [];
+        let parsedShifts = [];
+        
+        // 图表实例
+        let overviewChart = null;
+        let hourlyChart = null;
+        let weekdayChart = null;
+        let dailyChart = null;
+        let anchorChart = null;
+        let refundCurveChart = null;
+        
+        // 文件上传处理 - 订单数据
+        function handleOrderFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            showLoading();
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    orderData = jsonData;
+                    parsedOrders = parseOrderData(jsonData);
+                    
+                    // 显示文件名
+                    document.getElementById('orderFileInfo').innerHTML = 
+                        `<span class="file-tag">📄 ${file.name} <span class="remove" onclick="removeOrderFile()">×</span></span>`;
+                    
+                    analyzeData();
+                } catch (error) {
+                    console.error('解析Excel失败:', error);
+                    alert('解析Excel文件失败，请检查文件格式！');
+                    hideLoading();
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // 文件上传处理 - 值班表
+        function handleShiftFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    shiftData = jsonData;
+                    parsedShifts = parseShiftData(jsonData);
+                    
+                    document.getElementById('shiftFileInfo').innerHTML = 
+                        `<span class="file-tag">👤 ${file.name} <span class="remove" onclick="removeShiftFile()">×</span></span>`;
+                    
+                    // 如果已有订单数据，重新分析
+                    if (parsedOrders.length > 0) {
+                        analyzeData();
+                    }
+                } catch (error) {
+                    console.error('解析值班表失败:', error);
+                    alert('解析值班表文件失败，请检查文件格式！');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function removeOrderFile() {
+            orderData = null;
+            parsedOrders = [];
+            document.getElementById('orderFileInput').value = '';
+            document.getElementById('orderFileInfo').innerHTML = '';
+            resetAnalysis();
+        }
+        
+        function removeShiftFile() {
+            shiftData = null;
+            parsedShifts = [];
+            document.getElementById('shiftFileInput').value = '';
+            document.getElementById('shiftFileInfo').innerHTML = '';
+            if (parsedOrders.length > 0) {
+                analyzeData();
+            }
+        }
+        
+        // 解析订单数据（智能识别字段）
+        function parseOrderData(data) {
+            if (!data || data.length === 0) return [];
+            
+            const firstRow = data[0];
+            const keys = Object.keys(firstRow);
+            
+            // 智能识别字段名
+            let orderNoField, amountField, refundField, timeField, statusField;
+            
+            // 订单号字段
+            orderNoField = keys.find(k => /订单|order|编号|no|num/i.test(k)) || keys[0];
+            // 金额字段
+            amountField = keys.find(k => /金额|amount|实付|price|总价|sum/i.test(k)) || keys[1];
+            // 退款字段
+            refundField = keys.find(k => /退款|refund|退货/i.test(k));
+            // 时间字段
+            timeField = keys.find(k => /时间|date|时间|支付时间|下单时间|created|created_at/i.test(k));
+            // 状态字段
+            statusField = keys.find(k => /状态|status|类型|type/i.test(k));
+            
+            return data.map(row => {
+                let amount = 0;
+                let isRefund = false;
+                let refundDays = 0;
+                let time = null;
+                
+                // 解析金额
+                const amountStr = String(row[amountField] || 0).replace(/[¥$,，]/g, '');
+                amount = parseFloat(amountStr) || 0;
+                
+                // 解析退款状态
+                if (refundField) {
+                    const refundStr = String(row[refundField] || '');
+                    isRefund = /退款|退货|已退|refund/i.test(refundStr);
+                }
+                
+                if (statusField) {
+                    const statusStr = String(row[statusField] || '');
+                    if (/退款|退货|已退|closed|cancel|refund/i.test(statusStr)) {
+                        isRefund = true;
+                    }
+                }
+                
+                // 解析时间
+                if (timeField) {
+                    const timeStr = row[timeField];
+                    if (timeStr) {
+                        time = new Date(timeStr);
+                        if (isNaN(time.getTime())) {
+                            // 尝试Excel日期数字
+                            if (typeof timeStr === 'number') {
+                                time = new Date((timeStr - 25569) * 86400 * 1000);
+                            } else {
+                                time = null;
+                            }
+                        }
+                    }
+                }
+                
+                // 计算退款天数（如果有退款时间字段）
+                if (isRefund && timeField) {
+                    const refundTimeField = keys.find(k => /退款时间|退款日期|refund.*time/i.test(k));
+                    if (refundTimeField && row[refundTimeField]) {
+                        const refundTime = new Date(row[refundTimeField]);
+                        if (!isNaN(refundTime.getTime()) && time && !isNaN(time.getTime())) {
+                            refundDays = Math.floor((refundTime - time) / (1000 * 60 * 60 * 24));
+                        }
+                    }
+                }
+                
+                return {
+                    orderNo: row[orderNoField],
+                    amount: amount,
+                    isRefund: isRefund,
+                    refundDays: refundDays,
+                    time: time,
+                    raw: row
+                };
+            });
+        }
+        
+        // 解析值班表数据
+        function parseShiftData(data) {
+            if (!data || data.length === 0) return [];
+            
+            const firstRow = data[0];
+            const keys = Object.keys(firstRow);
+            
+            let dateField, periodField, anchorField;
+            
+            dateField = keys.find(k => /日期|date|时间/i.test(k));
+            periodField = keys.find(k => /时段|period|班次|shift|time/i.test(k));
+            anchorField = keys.find(k => /主播|anchor|主播名|name/i.test(k));
+            
+            return data.map(row => ({
+                date: row[dateField],
+                period: row[periodField],
+                anchor: row[anchorField]
+            }));
+        }
+        
+        function showLoading() {
+            document.getElementById('dataStatus').classList.add('hidden');
+            document.getElementById('loadingStatus').classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingStatus').classList.add('hidden');
+        }
+        
+        function resetAnalysis() {
+            document.getElementById('dataStatus').classList.remove('hidden');
+            document.getElementById('metricsCards').classList.add('hidden');
+            document.getElementById('analysisTabs').classList.add('hidden');
+            document.getElementById('chartArea').classList.add('hidden');
+            
+            // 销毁所有图表
+            if (overviewChart) { overviewChart.dispose(); overviewChart = null; }
+            if (hourlyChart) { hourlyChart.dispose(); hourlyChart = null; }
+            if (weekdayChart) { weekdayChart.dispose(); weekdayChart = null; }
+            if (dailyChart) { dailyChart.dispose(); dailyChart = null; }
+            if (anchorChart) { anchorChart.dispose(); anchorChart = null; }
+            if (refundCurveChart) { refundCurveChart.dispose(); refundCurveChart = null; }
+        }
+        
+        // 数据分析主函数
+        function analyzeData() {
+            hideLoading();
+            
+            if (parsedOrders.length === 0) {
+                resetAnalysis();
+                return;
+            }
+            
+            // 计算统计数据
+            const totalOrders = parsedOrders.length;
+            const refundOrders = parsedOrders.filter(o => o.isRefund).length;
+            const refundRate = totalOrders > 0 ? (refundOrders / totalOrders * 100) : 0;
+            const totalAmount = parsedOrders.reduce((sum, o) => sum + (o.isRefund ? 0 : o.amount), 0);
+            const refundAmount = parsedOrders.filter(o => o.isRefund).reduce((sum, o) => sum + o.amount, 0);
+            
+            // 获取日期范围
+            const dates = parsedOrders.filter(o => o.time).map(o => o.time.toISOString().split('T')[0]);
+            const uniqueDates = [...new Set(dates)];
+            const days = uniqueDates.length || 1;
+            const avgDailyRefund = refundAmount / days;
+            
+            // 更新指标卡片
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('refundRateDisplay').textContent = refundRate.toFixed(1) + '%';
+            document.getElementById('refundAmount').textContent = '¥' + refundAmount.toFixed(0);
+            document.getElementById('avgDailyRefund').textContent = '¥' + avgDailyRefund.toFixed(0);
+            
+            // 显示分析区域
+            document.getElementById('metricsCards').classList.remove('hidden');
+            document.getElementById('analysisTabs').classList.remove('hidden');
+            document.getElementById('chartArea').classList.remove('hidden');
+            
+            // 默认显示退款总览
+            switchTab('overview');
+        }
+        
+        // 切换标签页
+        function switchTab(tab) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 隐藏所有图表
+            document.getElementById('overviewChart').classList.add('hidden');
+            document.getElementById('hourlyChart').classList.add('hidden');
+            document.getElementById('weekdayChart').classList.add('hidden');
+            document.getElementById('dailyChart').classList.add('hidden');
+            document.getElementById('anchorChart').classList.add('hidden');
+            document.getElementById('refundCurveChart').classList.add('hidden');
+            
+            // 显示对应图表
+            switch(tab) {
+                case 'overview':
+                    document.getElementById('overviewChart').classList.remove('hidden');
+                    renderOverviewChart();
+                    break;
+                case 'hourly':
+                    document.getElementById('hourlyChart').classList.remove('hidden');
+                    renderHourlyChart();
+                    break;
+                case 'weekday':
+                    document.getElementById('weekdayChart').classList.remove('hidden');
+                    renderWeekdayChart();
+                    break;
+                case 'daily':
+                    document.getElementById('dailyChart').classList.remove('hidden');
+                    renderDailyChart();
+                    break;
+                case 'anchor':
+                    document.getElementById('anchorChart').classList.remove('hidden');
+                    renderAnchorChart();
+                    break;
+                case 'refundCurve':
+                    document.getElementById('refundCurveChart').classList.remove('hidden');
+                    renderRefundCurveChart();
+                    break;
+            }
+        }
+        
+        // 渲染退款总览图表
+        function renderOverviewChart() {
+            const container = document.getElementById('overviewChartInner');
+            if (!container) return;
+            
+            if (overviewChart) {
+                overviewChart.dispose();
+            }
+            
+            overviewChart = echarts.init(container);
+            
+            const totalOrders = parsedOrders.length;
+            const refundOrders = parsedOrders.filter(o => o.isRefund).length;
+            const validOrders = totalOrders - refundOrders;
+            const refundAmount = parsedOrders.filter(o => o.isRefund).reduce((sum, o) => sum + o.amount, 0);
+            const validAmount = parsedOrders.filter(o => !o.isRefund).reduce((sum, o) => sum + o.amount, 0);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    right: 10,
+                    top: 'center',
+                    textStyle: { color: '#666' }
+                },
+                series: [
+                    {
+                        name: '订单数',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['35%', '50%'],
+                        avoidLabelOverlap: false,
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 14,
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: [
+                            { value: validOrders, name: '有效订单', itemStyle: { color: '#10b981' } },
+                            { value: refundOrders, name: '退款订单', itemStyle: { color: '#ef4444' } }
+                        ]
+                    }
+                ]
+            };
+            
+            overviewChart.setOption(option);
+        }
+        
+        // 渲染时段分析图表
+        function renderHourlyChart() {
+            const container = document.getElementById('hourlyChartInner');
+            if (!container) return;
+            
+            if (hourlyChart) {
+                hourlyChart.dispose();
+            }
+            
+            hourlyChart = echarts.init(container);
+            
+            // 按小时统计退款
+            const hourlyData = {};
+            for (let i = 0; i < 24; i++) {
+                hourlyData[i] = { total: 0, refund: 0 };
+            }
+            
+            parsedOrders.forEach(order => {
+                if (order.time && !isNaN(order.time.getTime())) {
+                    const hour = order.time.getHours();
+                    hourlyData[hour].total++;
+                    if (order.isRefund) {
+                        hourlyData[hour].refund++;
+                    }
+                }
+            });
+            
+            const hours = [];
+            const refundCounts = [];
+            const refundRates = [];
+            
+            for (let i = 0; i < 24; i++) {
+                hours.push(i + '时');
+                refundCounts.push(hourlyData[i].refund);
+                const rate = hourlyData[i].total > 0 ? (hourlyData[i].refund / hourlyData[i].total * 100) : 0;
+                refundRates.push(rate.toFixed(1));
+            }
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: hours,
+                    axisLabel: { 
+                        color: '#666',
+                        interval: 2
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '退款数',
+                        axisLabel: { color: '#666' }
+                    },
+                    {
+                        type: 'value',
+                        name: '退款率%',
+                        axisLabel: { color: '#666' }
+                    }
+                ],
+                series: [
+                    {
+                        name: '退款数',
+                        type: 'bar',
+                        data: refundCounts,
+                        itemStyle: { color: '#ef4444' }
+                    },
+                    {
+                        name: '退款率',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: refundRates,
+                        itemStyle: { color: '#f59e0b' },
+                        smooth: true
+                    }
+                ]
+            };
+            
+            hourlyChart.setOption(option);
+        }
+        
+        // 渲染星期分析图表
+        function renderWeekdayChart() {
+            const container = document.getElementById('weekdayChartInner');
+            if (!container) return;
+            
+            if (weekdayChart) {
+                weekdayChart.dispose();
+            }
+            
+            weekdayChart = echarts.init(container);
+            
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const weekdayData = weekdays.map(() => ({ total: 0, refund: 0 }));
+            
+            parsedOrders.forEach(order => {
+                if (order.time && !isNaN(order.time.getTime())) {
+                    const day = order.time.getDay();
+                    weekdayData[day].total++;
+                    if (order.isRefund) {
+                        weekdayData[day].refund++;
+                    }
+                }
+            });
+            
+            const refundRates = weekdayData.map(d => {
+                return d.total > 0 ? (d.refund / d.total * 100).toFixed(1) : 0;
+            });
+            
+            const refundCounts = weekdayData.map(d => d.refund);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: weekdays,
+                    axisLabel: { color: '#666' }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '退款数',
+                        axisLabel: { color: '#666' }
+                    },
+                    {
+                        type: 'value',
+                        name: '退款率%',
+                        axisLabel: { color: '#666' }
+                    }
+                ],
+                series: [
+                    {
+                        name: '退款数',
+                        type: 'bar',
+                        data: refundCounts,
+                        itemStyle: { color: '#ef4444' }
+                    },
+                    {
+                        name: '退款率',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: refundRates,
+                        itemStyle: { color: '#f59e0b' },
+                        smooth: true
+                    }
+                ]
+            };
+            
+            weekdayChart.setOption(option);
+        }
+        
+        // 渲染日趋势图表
+        function renderDailyChart() {
+            const container = document.getElementById('dailyChartInner');
+            if (!container) return;
+            
+            if (dailyChart) {
+                dailyChart.dispose();
+            }
+            
+            dailyChart = echarts.init(container);
+            
+            // 按日期统计
+            const dailyData = {};
+            parsedOrders.forEach(order => {
+                if (order.time && !isNaN(order.time.getTime())) {
+                    const date = order.time.toISOString().split('T')[0];
+                    if (!dailyData[date]) {
+                        dailyData[date] = { total: 0, refund: 0 };
+                    }
+                    dailyData[date].total++;
+                    if (order.isRefund) {
+                        dailyData[date].refund++;
+                    }
+                }
+            });
+            
+            const sortedDates = Object.keys(dailyData).sort();
+            const dates = sortedDates.map(d => d.slice(5)); // 去掉年份显示MM-DD
+            const refundRates = sortedDates.map(d => {
+                const rate = dailyData[d].total > 0 ? (dailyData[d].refund / dailyData[d].total * 100) : 0;
+                return rate.toFixed(1);
+            });
+            const refundCounts = sortedDates.map(d => dailyData[d].refund);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    axisLabel: { 
+                        color: '#666',
+                        rotate: 45
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '退款数',
+                        axisLabel: { color: '#666' }
+                    },
+                    {
+                        type: 'value',
+                        name: '退款率%',
+                        max: 100,
+                        axisLabel: { color: '#666' }
+                    }
+                ],
+                series: [
+                    {
+                        name: '退款数',
+                        type: 'bar',
+                        data: refundCounts,
+                        itemStyle: { color: '#ef4444' }
+                    },
+                    {
+                        name: '退款率',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: refundRates,
+                        itemStyle: { color: '#667eea' },
+                        smooth: true
+                    }
+                ]
+            };
+            
+            dailyChart.setOption(option);
+        }
+        
+        // 渲染主播分析图表
+        function renderAnchorChart() {
+            const container = document.getElementById('anchorChartInner');
+            if (!container) return;
+            
+            if (anchorChart) {
+                anchorChart.dispose();
+            }
+            
+            anchorChart = echarts.init(container);
+            
+            // 按主播统计（需要通过值班表关联）
+            const anchorData = {};
+            
+            // 如果有值班表数据，尝试关联
+            if (parsedShifts.length > 0) {
+                parsedOrders.forEach(order => {
+                    if (order.time) {
+                        const orderDate = order.time.toISOString().split('T')[0];
+                        const orderHour = order.time.getHours();
+                        
+                        // 查找对应时段的主播
+                        const shift = parsedShifts.find(s => {
+                            if (!s.date) return false;
+                            const shiftDate = new Date(s.date).toISOString().split('T')[0];
+                            return shiftDate === orderDate;
+                        });
+                        
+                        if (shift && shift.anchor) {
+                            const anchorName = shift.anchor;
+                            if (!anchorData[anchorName]) {
+                                anchorData[anchorName] = { total: 0, refund: 0 };
+                            }
+                            anchorData[anchorName].total++;
+                            if (order.isRefund) {
+                                anchorData[anchorName].refund++;
+                            }
+                        }
+                    }
+                });
+            } else {
+                // 没有值班表，显示提示
+                const option = {
+                    title: {
+                        text: '请上传主播值班表以查看主播分析',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 14
+                        }
+                    }
+                };
+                anchorChart.setOption(option);
+                return;
+            }
+            
+            const anchors = Object.keys(anchorData);
+            if (anchors.length === 0) {
+                const option = {
+                    title: {
+                        text: '未能识别主播数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 14
+                        }
+                    }
+                };
+                anchorChart.setOption(option);
+                return;
+            }
+            
+            const refundRates = anchors.map(a => {
+                const rate = anchorData[a].total > 0 ? (anchorData[a].refund / anchorData[a].total * 100) : 0;
+                return rate.toFixed(1);
+            });
+            const refundCounts = anchors.map(a => anchorData[a].refund);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: anchors,
+                    axisLabel: { color: '#666' }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '退款数',
+                        axisLabel: { color: '#666' }
+                    },
+                    {
+                        type: 'value',
+                        name: '退款率%',
+                        axisLabel: { color: '#666' }
+                    }
+                ],
+                series: [
+                    {
+                        name: '退款数',
+                        type: 'bar',
+                        data: refundCounts,
+                        itemStyle: { color: '#ef4444' }
+                    },
+                    {
+                        name: '退款率',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: refundRates,
+                        itemStyle: { color: '#f59e0b' },
+                        smooth: true
+                    }
+                ]
+            };
+            
+            anchorChart.setOption(option);
+        }
+        
+        // 渲染7天退款曲线图表
+        function renderRefundCurveChart() {
+            const container = document.getElementById('refundCurveChartInner');
+            if (!container) return;
+            
+            if (refundCurveChart) {
+                refundCurveChart.dispose();
+            }
+            
+            refundCurveChart = echarts.init(container);
+            
+            // 统计退款天数分布
+            const daysDistribution = {};
+            for (let i = 0; i <= 30; i++) {
+                daysDistribution[i] = 0;
+            }
+            
+            let validRefundCount = 0;
+            parsedOrders.forEach(order => {
+                if (order.isRefund && order.refundDays > 0) {
+                    if (order.refundDays <= 30) {
+                        daysDistribution[order.refundDays]++;
+                        validRefundCount++;
+                    }
+                }
+            });
+            
+            // 只显示有数据的区间
+            const days = [];
+            const counts = [];
+            for (let i = 0; i <= 30; i++) {
+                if (daysDistribution[i] > 0 || (i <= 7)) {
+                    days.push(i + '天');
+                    counts.push(daysDistribution[i]);
+                }
+            }
+            
+            if (validRefundCount === 0) {
+                const option = {
+                    title: {
+                        text: '退款时间数据不足\n（需要退款时间字段）',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 14
+                        },
+                        textAlign: 'center'
+                    }
+                };
+                refundCurveChart.setOption(option);
+                return;
+            }
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: '{b}: {c} 笔退款'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: days,
+                    axisLabel: { color: '#666' }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '退款笔数',
+                    axisLabel: { color: '#666' }
+                },
+                series: [{
+                    name: '退款笔数',
+                    type: 'bar',
+                    data: counts,
+                    itemStyle: {
+                        color: function(params) {
+                            const idx = params.dataIndex;
+                            if (idx <= 1) return '#10b981'; // 0-1天 绿色
+                            if (idx <= 3) return '#f59e0b'; // 2-3天 黄色
+                            if (idx <= 7) return '#ef4444';  // 4-7天 红色
+                            return '#6b7280'; // 7天后 灰色
+                        }
+                    }
+                }]
+            };
+            
+            refundCurveChart.setOption(option);
+        }
+        
+        // 窗口调整时重绘图表
+        window.addEventListener('resize', function() {
+            if (overviewChart) overviewChart.resize();
+            if (hourlyChart) hourlyChart.resize();
+            if (weekdayChart) weekdayChart.resize();
+            if (dailyChart) dailyChart.resize();
+            if (anchorChart) anchorChart.resize();
+            if (refundCurveChart) refundCurveChart.resize();
+        });
     </script>
 </body>
 </html>
