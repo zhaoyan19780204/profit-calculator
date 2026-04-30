@@ -8,11 +8,14 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-x: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 16px;
+            padding: 12px;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
         }
         .container {
             max-width: 600px;
@@ -25,18 +28,18 @@
         .header {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
-            padding: 24px 20px;
+            padding: 20px 16px;
             text-align: center;
         }
-        .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
-        .header p { font-size: 14px; opacity: 0.9; }
-        .section { padding: 20px; border-bottom: 1px solid #f0f0f0; }
+        .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+        .header p { font-size: 13px; opacity: 0.9; }
+        .section { padding: 16px; border-bottom: 1px solid #f0f0f0; }
         .section:last-child { border-bottom: none; }
         .section-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             color: #333;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -48,8 +51,8 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 2px;
         }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 14px; color: #666; margin-bottom: 6px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
         .form-group input, .form-group select {
             width: 100%;
             padding: 12px;
@@ -128,58 +131,68 @@
         .analysis-section { background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); }
         .upload-area {
             border: 2px dashed #d1d5db;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 10px;
+            padding: 20px 12px;
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .upload-area:hover { border-color: #667eea; background: rgba(102, 126, 234, 0.05); }
-        .upload-icon { font-size: 48px; margin-bottom: 12px; }
-        .upload-text { color: #666; font-size: 14px; }
+        .upload-icon { font-size: 40px; margin-bottom: 10px; }
+        .upload-text { color: #666; font-size: 13px; }
         .upload-text strong { color: #667eea; }
-        .upload-hint { font-size: 12px; color: #999; margin-top: 8px; }
+        .upload-hint { font-size: 11px; color: #999; margin-top: 6px; }
         .file-input { display: none; }
-        .uploaded-files { margin-top: 12px; }
+        .uploaded-files { margin-top: 12px; overflow-x: auto; }
         .file-tag {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             background: #e0e7ff;
             color: #4338ca;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             margin: 4px;
+            max-width: 100%;
+            overflow: hidden;
         }
-        .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .file-tag span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 150px;
+        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
         .metric-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 10px;
+            padding: 12px 8px;
             color: white;
             text-align: center;
+            overflow: hidden;
         }
         .metric-card.warning { background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); }
         .metric-card.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-        .metric-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-        .metric-label { font-size: 12px; opacity: 0.9; }
-        .tab-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .metric-value { font-size: 22px; font-weight: 700; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .metric-label { font-size: 11px; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tab-buttons { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; white-space: nowrap; }
         .tab-btn {
-            padding: 8px 16px;
+            padding: 8px 14px;
             border: 1px solid #e0e0e0;
             border-radius: 20px;
             background: white;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
+            flex-shrink: 0;
         }
         .tab-btn:hover { border-color: #667eea; color: #667eea; }
         .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: transparent; }
-        .chart-container { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .chart-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px; }
-        .chart { width: 100%; height: 300px; }
+        .chart-container { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
+        .chart-title { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chart { width: 100%; height: 280px; }
         .empty-state { text-align: center; padding: 40px 20px; color: #999; }
         .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
         .loading { text-align: center; padding: 20px; color: #667eea; }
@@ -196,14 +209,14 @@
         
         /* ============ 主播排班样式 ============ */
         /* ============ 销售分析样式 ============ */
-        .big-tab-container { display: flex; gap: 8px; margin-bottom: 16px; }
+        .big-tab-container { display: flex; gap: 8px; margin-bottom: 14px; }
         .big-tab-btn {
             flex: 1;
-            padding: 12px 16px;
+            padding: 10px 12px;
             border: 2px solid #e0e0e0;
-            border-radius: 12px;
+            border-radius: 10px;
             background: white;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -215,19 +228,20 @@
             color: white; 
             border-color: transparent; 
         }
-        .sales-metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .sales-metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
         .sales-metric-card {
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 10px;
+            padding: 12px 8px;
             color: white;
             text-align: center;
+            overflow: hidden;
         }
         .sales-metric-card.blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
         .sales-metric-card.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
         .sales-metric-card.purple { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
         .sales-metric-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-        .sales-metric-value { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
-        .sales-metric-label { font-size: 12px; opacity: 0.9; }
+        .sales-metric-value { font-size: 22px; font-weight: 700; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sales-metric-label { font-size: 11px; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
         .anchor-schedule-badge {
             display: inline-block;
@@ -237,15 +251,15 @@
             margin-left: 8px;
         }
         .badge-new { background: #d1fae5; color: #065f46; }
-        .anchor-item { background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 12px; position: relative; }
-        .anchor-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;}
+        .anchor-item { background: #f8fafc; border-radius: 10px; padding: 12px; margin-bottom: 10px; position: relative; }
+        .anchor-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;}
         .anchor-name-input {
             flex: 1;
-            min-width: 100px;
-            padding: 10px 12px;
+            min-width: 80px;
+            padding: 8px 10px;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             background: white;
         }
         .anchor-delete-btn {
@@ -294,7 +308,7 @@
             border-radius: 16px 16px 0 0;
             width: 100%;
             max-width: 400px;
-            padding: 20px;
+            padding: 16px;
             animation: slideUp 0.3s ease;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -397,6 +411,90 @@
             color: #92400e;
         }
         
+        /* ============ 手机适配 (640px以下) ============ */
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .container { border-radius: 12px; }
+            .header { padding: 16px 12px; }
+            .header h1 { font-size: 18px; }
+            .header p { font-size: 12px; }
+            .section { padding: 14px 12px; }
+            .section-title { font-size: 14px; margin-bottom: 12px; }
+            
+            /* 卡片2列布局 */
+            .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+            .sales-metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+            .metric-card { padding: 10px 6px; }
+            .metric-value { font-size: 18px; }
+            .metric-label { font-size: 10px; }
+            .sales-metric-card { padding: 10px 6px; }
+            .sales-metric-value { font-size: 18px; }
+            .sales-metric-label { font-size: 10px; }
+            
+            /* Tab按钮横向滚动 */
+            .tab-buttons { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+            .tab-btn { font-size: 11px; padding: 6px 10px; white-space: nowrap; flex-shrink: 0; }
+            
+            /* 大Tab切换 */
+            .big-tab-container { gap: 6px; margin-bottom: 12px; }
+            .big-tab-btn { padding: 8px 10px; font-size: 13px; border-radius: 8px; }
+            
+            /* 图表高度 */
+            .chart { height: 220px; }
+            .chart-container { padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+            .chart-title { font-size: 12px; margin-bottom: 8px; }
+            
+            /* 表单 */
+            .form-group { margin-bottom: 12px; }
+            .form-group label { font-size: 12px; }
+            .form-group input, .form-group select { padding: 10px; font-size: 15px; }
+            
+            /* 按钮 */
+            .calculate-btn { padding: 14px; font-size: 16px; }
+            .add-anchor-btn { padding: 12px; font-size: 14px; }
+            
+            /* 金额显示 */
+            #adSpendDisplay, #douyinFeeDisplay, #anchorRewardDisplay, #companyTaxDisplay {
+                font-size: 16px; padding: 10px;
+            }
+            .result-value { font-size: 18px; }
+            
+            /* 轮播图 */
+            .wheel-picker-content { padding: 14px; }
+            .wheel-picker-title { font-size: 14px; }
+            .wheel-container { height: 160px; gap: 16px; }
+            .wheel-item { height: 40px; line-height: 40px; font-size: 16px; }
+            .wheel-item.selected { font-size: 18px; }
+            .wheel-mask { height: 40px; }
+            
+            /* 上传区域 */
+            .upload-area { padding: 16px 10px; }
+            .upload-icon { font-size: 36px; }
+            .upload-text { font-size: 12px; }
+            
+            /* 分析卡片 */
+            .analysis-card { padding: 12px; margin-top: 12px; }
+            .analysis-title { font-size: 13px; margin-bottom: 10px; }
+            .analysis-item { font-size: 12px; padding: 6px 0; }
+            
+            /* 提示信息 */
+            .tips { padding: 10px 12px; font-size: 12px; }
+            
+            /* 主播排班 */
+            .anchor-item { padding: 10px; margin-bottom: 8px; }
+            .anchor-name-input { font-size: 13px; padding: 8px; }
+            .anchor-schedule-badge { font-size: 10px; padding: 2px 6px; }
+            .schedule-legend { padding: 8px; font-size: 11px; gap: 8px; }
+            
+            /* 渠道表格 */
+            .channel-stats-table { font-size: 11px; }
+            .channel-stats-table th, .channel-stats-table td { padding: 8px 4px; }
+            
+            /* 禁止横向滚动 */
+            body { overflow-x: hidden; }
+            * { max-width: 100vw; box-sizing: border-box; }
+        }
+        
         @media (max-width: 400px) {
             .form-row { grid-template-columns: 1fr; }
             .price-selector { flex-direction: column; }
@@ -404,6 +502,9 @@
             .sales-metrics-grid { grid-template-columns: 1fr; }
             .time-range { flex-direction: column; align-items: stretch; }
             .time-label { margin-bottom: 6px; }
+            .header h1 { font-size: 16px; }
+            .chart { height: 200px; }
+            .big-tab-btn { font-size: 12px; padding: 8px; }
         }
     </style>
 </head>
@@ -707,7 +808,7 @@
                 <div id="salesChartArea" class="hidden">
                     <!-- 销售总览 -->
                     <div id="salesOverviewChart" class="chart-container">
-                        <div class="chart-title">💰 有效订单 vs 退款订单金额占比</div>
+                        <div class="chart-title">💰 有效订单 vs 退款订单占比</div>
                         <div id="salesOverviewChartInner" class="chart"></div>
                     </div>
                     
@@ -1862,12 +1963,10 @@
             
             const refundOrders = parsedOrders.filter(o => o.isRefund).length;
             const validOrders = parsedOrders.length - refundOrders;
-            const refundRate = parsedOrders.length > 0 ? (refundOrders / parsedOrders.length * 100).toFixed(1) : 0;
-            const validRate = parsedOrders.length > 0 ? (validOrders / parsedOrders.length * 100).toFixed(1) : 0;
             
             overviewChart.setOption({
                 tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
-                legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#666' } },
+                legend: { orient: 'vertical', right: 5, top: 'center', textStyle: { color: '#666', fontSize: 11 } },
                 series: [{
                     type: 'pie', radius: ['40%', '70%'], center: ['35%', '50%'],
                     label: {
@@ -1875,11 +1974,11 @@
                         formatter: function(params) {
                             return params.name + '\n' + params.value + '单 (' + params.percent.toFixed(1) + '%)';
                         },
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 'bold',
-                        lineHeight: 20
+                        lineHeight: 18
                     },
-                    labelLine: { show: true, length: 15, length2: 10 },
+                    labelLine: { show: true, length: 8, length2: 6 },
                     data: [
                         { value: validOrders, name: '有效订单', itemStyle: { color: '#10b981' }, label: { color: '#10b981' } },
                         { value: refundOrders, name: '退款订单', itemStyle: { color: '#ef4444' }, label: { color: '#ef4444' } }
@@ -1895,28 +1994,29 @@
             if (salesOverviewChart) salesOverviewChart.dispose();
             salesOverviewChart = echarts.init(container);
             
-            const totalSales = parsedOrders.reduce((sum, o) => sum + o.amount, 0);
-            const refundAmount = parsedOrders.filter(o => o.isRefund).reduce((sum, o) => sum + o.amount, 0);
-            const validSales = totalSales - refundAmount;
+            // 按单数计算，不是按金额
+            const totalOrders = parsedOrders.length;
+            const refundOrders = parsedOrders.filter(o => o.isRefund).length;
+            const validOrders = totalOrders - refundOrders;
             
             salesOverviewChart.setOption({
-                tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
-                legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#666' } },
+                tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
+                legend: { orient: 'vertical', right: 5, top: 'center', textStyle: { color: '#666', fontSize: 11 } },
                 series: [{
                     type: 'pie', radius: ['40%', '70%'], center: ['35%', '50%'],
                     label: {
                         show: true,
                         formatter: function(params) {
-                            return params.name + '\n¥' + params.value + ' (' + params.percent.toFixed(1) + '%)';
+                            return params.name + '\n' + params.value + '单 (' + params.percent.toFixed(1) + '%)';
                         },
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 'bold',
-                        lineHeight: 20
+                        lineHeight: 18
                     },
-                    labelLine: { show: true, length: 15, length2: 10 },
+                    labelLine: { show: true, length: 8, length2: 6 },
                     data: [
-                        { value: validSales.toFixed(2), name: '有效收入', itemStyle: { color: '#10b981' }, label: { color: '#10b981' } },
-                        { value: refundAmount.toFixed(2), name: '退款金额', itemStyle: { color: '#ef4444' }, label: { color: '#ef4444' } }
+                        { value: validOrders, name: '有效订单', itemStyle: { color: '#10b981' }, label: { color: '#10b981' } },
+                        { value: refundOrders, name: '退款订单', itemStyle: { color: '#ef4444' }, label: { color: '#ef4444' } }
                     ]
                 }]
             });
