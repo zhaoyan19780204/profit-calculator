@@ -1520,23 +1520,29 @@
                 // 判断退款（兼容多种格式）
                 // 1. 抖音佣金表：订单状态含"退货退款"
                 if (statusField) {
-                    const statusStr = String(row[statusField] || '');
+                    const statusStr = String(row[statusField] || '').replace(/\t/g, '').trim();
                     if (/退货退款|退款|已退|closed|cancel|refund/i.test(statusStr)) isRefund = true;
                 }
                 // 2. 抖音佣金表：有退款字段
                 if (refundField) {
-                    const refundStr = String(row[refundField] || '');
+                    const refundStr = String(row[refundField] || '').replace(/\t/g, '').trim();
                     if (/退款|退货|已退|refund/i.test(refundStr)) isRefund = true;
                 }
-                // 3. 微信小店：售后状态含"退款"/"退货"
-                if (afterSaleField && !isRefund) {
-                    const afterSaleStr = String(row[afterSaleField] || '');
-                    if (/退款|退货|已退|refund|退款中|退款成功/i.test(afterSaleStr)) isRefund = true;
+                // 3. 微信小店：售后状态含"退款"/"退货"（值可能是"商品名-退款成功"格式）
+                if (afterSaleField) {
+                    const afterSaleStr = String(row[afterSaleField] || '').replace(/\t/g, '').trim();
+                    if (/退款|退货|已退|refund/i.test(afterSaleStr) && afterSaleStr !== '-' && afterSaleStr !== '') isRefund = true;
                 }
                 // 4. 微信小店：取消原因含"退款"
                 if (cancelField && !isRefund) {
-                    const cancelStr = String(row[cancelField] || '');
+                    const cancelStr = String(row[cancelField] || '').replace(/\t/g, '').trim();
                     if (/退款|退货/i.test(cancelStr)) isRefund = true;
+                }
+                // 5. 微信小店兜底：已关闭 + 售后状态非空非"-" = 大概率退款
+                if (!isRefund && statusField && afterSaleField) {
+                    const statusStr = String(row[statusField] || '').replace(/\t/g, '').trim();
+                    const afterSaleStr = String(row[afterSaleField] || '').replace(/\t/g, '').trim();
+                    if (/已关闭/i.test(statusStr) && afterSaleStr && afterSaleStr !== '-') isRefund = true;
                 }
                 
                 // 解析时间
