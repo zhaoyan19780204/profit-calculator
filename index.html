@@ -528,9 +528,13 @@
         <div class="section analysis-section">
             <div class="section-title">📊 数据分析</div>
             
-            <!-- 主播排班配置 -->
+            <!-- 主播排班配置（默认折叠，点击展开） -->
             <div class="anchor-section">
-                <div class="section-title" style="margin-bottom:12px;font-size:15px;">👤 主播排班配置</div>
+                <div class="section-title" style="margin-bottom:0;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="toggleAnchorSection()">
+                    <span>👤 主播排班配置</span>
+                    <span id="anchorToggleIcon" style="font-size:12px;color:#999;transition:transform 0.3s;">▼ 点击展开</span>
+                </div>
+                <div id="anchorContent" style="display:none;margin-top:12px;">
                 
                 <!-- 排班说明 -->
                 <div class="schedule-legend">
@@ -551,6 +555,7 @@
                 <div id="anchorList"></div>
                 <button class="add-anchor-btn" onclick="addAnchorShift()">+ 添加主播时段</button>
                 <div class="anchor-hint">💡 系统会根据订单日期自动匹配对应日期的排班</div>
+                </div><!-- anchorContent end -->
             </div>
             
             <!-- 上传区域 -->
@@ -867,6 +872,18 @@
             return defaultSchedule;
         }
         
+        function toggleAnchorSection() {
+            const content = document.getElementById('anchorContent');
+            const icon = document.getElementById('anchorToggleIcon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '▲ 点击收起';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▼ 点击展开';
+            }
+        }
+
         function loadAnchorShifts() {
             const saved = localStorage.getItem('anchorShifts');
             if (saved) {
