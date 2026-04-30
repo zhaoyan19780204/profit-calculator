@@ -1037,27 +1037,72 @@
         function handleOrderFile(input) {
             const file = input.files[0];
             if (!file) return;
+            
+            // 文件格式校验
+            const validExts = ['.xlsx', '.xls', '.csv'];
+            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (!validExts.includes(ext)) {
+                alert('不支持的文件格式！请上传 .xlsx、.xls 或 .csv 文件。\n当前文件: ' + file.name);
+                input.value = '';
+                return;
+            }
+            
+            // 文件大小校验（50MB上限）
+            if (file.size > 50 * 1024 * 1024) {
+                alert('文件过大（' + (file.size / 1024 / 1024).toFixed(1) + 'MB），请上传小于50MB的文件。');
+                input.value = '';
+                return;
+            }
+            
             showLoading();
             
             const reader = new FileReader();
+            reader.onerror = function() {
+                alert('文件读取失败，请重试。');
+                hideLoading();
+                input.value = '';
+            };
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    let workbook;
+                    
+                    // 尝试用array方式解析
+                    try {
+                        workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    } catch(e1) {
+                        // 回退：尝试binary方式
+                        try {
+                            const binaryStr = e.target.result;
+                            workbook = XLSX.read(binaryStr, { type: 'binary', cellDates: true });
+                        } catch(e2) {
+                            // 回退：尝试base64方式
+                            const base64 = btoa(String.fromCharCode.apply(null, data));
+                            workbook = XLSX.read(base64, { type: 'base64', cellDates: true });
+                        }
+                    }
+                    
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                    
+                    if (!jsonData || jsonData.length === 0) {
+                        alert('Excel文件为空，没有数据行。');
+                        hideLoading();
+                        return;
+                    }
                     
                     orderData = jsonData;
                     parsedOrders = parseOrderData(jsonData);
                     
                     document.getElementById('orderFileInfo').innerHTML = 
-                        `<span class="file-tag">📄 ${file.name}</span>`;
+                        `<span class="file-tag">📄 ${file.name} (${jsonData.length}条数据)</span>`;
                     
                     analyzeData();
                 } catch (error) {
                     console.error('解析Excel失败:', error);
-                    alert('解析Excel文件失败，请检查文件格式！');
+                    alert('解析Excel文件失败: ' + (error.message || error) + '\n\n请确认文件是标准的Excel格式(.xlsx)，不是加密或受保护的文件。');
                     hideLoading();
+                    input.value = '';
                 }
             };
             reader.readAsArrayBuffer(file);
