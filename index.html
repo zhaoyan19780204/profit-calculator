@@ -195,7 +195,40 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         
         /* ============ 主播排班样式 ============ */
-        .anchor-section { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        /* ============ 销售分析样式 ============ */
+        .big-tab-container { display: flex; gap: 8px; margin-bottom: 16px; }
+        .big-tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .big-tab-btn:hover { border-color: #667eea; }
+        .big-tab-btn.active { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            border-color: transparent; 
+        }
+        .sales-metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .sales-metric-card {
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            text-align: center;
+        }
+        .sales-metric-card.blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .sales-metric-card.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .sales-metric-card.purple { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+        .sales-metric-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .sales-metric-value { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .sales-metric-label { font-size: 12px; opacity: 0.9; }
+        
         .anchor-schedule-badge {
             display: inline-block;
             padding: 4px 10px;
@@ -313,10 +346,52 @@
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
         
+        .sales-analysis-section, .refund-analysis-section { display: none; }
+        .sales-analysis-section.active, .refund-analysis-section.active { display: block; }
+        
+        /* 商品结构分析样式 */
+        .product-stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+        .product-stats-table th, .product-stats-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .product-stats-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #666;
+        }
+        .product-stats-table td { color: #333; }
+        .product-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .product-tag.basic { background: #dbeafe; color: #1e40af; }
+        .product-tag.upgrade { background: #fce7f3; color: #9d174d; }
+        .product-tag.other { background: #f3f4f6; color: #374151; }
+        
+        .sales-insight {
+            background: #f0fdf4;
+            border-left: 3px solid #22c55e;
+            padding: 10px 14px;
+            margin-top: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: #166534;
+        }
+        
         @media (max-width: 400px) {
             .form-row { grid-template-columns: 1fr; }
             .price-selector { flex-direction: column; }
             .metrics-grid { grid-template-columns: 1fr; }
+            .sales-metrics-grid { grid-template-columns: 1fr; }
             .time-range { flex-direction: column; align-items: stretch; }
             .time-label { margin-bottom: 6px; }
         }
@@ -529,6 +604,12 @@
         <div class="section analysis-section">
             <div class="section-title">📊 数据分析</div>
             
+            <!-- 大Tab切换 -->
+            <div class="big-tab-container">
+                <button class="big-tab-btn active" id="salesTabBtn" onclick="switchBigTab('sales')">📈 销售分析</button>
+                <button class="big-tab-btn" id="refundTabBtn" onclick="switchBigTab('refund')">💸 退款分析</button>
+            </div>
+            
             <!-- 主播排班配置（默认折叠，点击展开） -->
             <div class="anchor-section">
                 <div class="section-title" style="margin-bottom:0;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="toggleAnchorSection()">
@@ -572,7 +653,7 @@
             <div id="dataStatus" class="empty-state">
                 <div class="icon">📈</div>
                 <h3>暂无数据</h3>
-                <p>上传Excel文件后自动分析退款数据</p>
+                <p>上传Excel文件后自动分析数据</p>
             </div>
             
             <div id="loadingStatus" class="loading hidden">
@@ -580,57 +661,140 @@
                 <div>正在解析数据...</div>
             </div>
             
-            <div id="metricsCards" class="metrics-grid hidden">
-                <div class="metric-card"><div class="metric-value" id="totalOrders">-</div><div class="metric-label">总订单数</div></div>
-                <div class="metric-card warning"><div class="metric-value" id="refundRateDisplay">-</div><div class="metric-label">退款率</div></div>
-                <div class="metric-card"><div class="metric-value" id="refundAmount">-</div><div class="metric-label">退款金额</div></div>
-                <div class="metric-card success"><div class="metric-value" id="avgDailyRefund">-</div><div class="metric-label">日均退款</div></div>
-            </div>
-            
-            <div id="analysisTabs" class="tab-buttons hidden">
-                <button class="tab-btn active" onclick="switchTab('overview', event)">退款总览</button>
-                <button class="tab-btn" onclick="switchTab('hourly', event)">时段分析</button>
-                <button class="tab-btn" onclick="switchTab('weekday', event)">星期分析</button>
-                <button class="tab-btn" onclick="switchTab('daily', event)">日趋势</button>
-                <button class="tab-btn" onclick="switchTab('anchor', event)">主播分析</button>
-                <button class="tab-btn" onclick="switchTab('refundCurve', event)">7天退款</button>
-                <button class="tab-btn" onclick="switchTab('refundTrend', event)">退款趋势</button>
-            </div>
-            
-            <div id="chartArea" class="hidden">
-                <div id="overviewChart" class="chart-container">
-                    <div class="chart-title">📊 退款结构分析</div>
-                    <div id="overviewChartInner" class="chart"></div>
-                </div>
-                <div id="hourlyChart" class="chart-container hidden">
-                    <div class="chart-title">⏰ 24小时退款分布</div>
-                    <div id="hourlyChartInner" class="chart"></div>
-                </div>
-                <div id="weekdayChart" class="chart-container hidden">
-                    <div class="chart-title">📅 星期退款对比</div>
-                    <div id="weekdayChartInner" class="chart"></div>
-                </div>
-                <div id="dailyChart" class="chart-container hidden">
-                    <div class="chart-title">📈 每日退款率走势</div>
-                    <div id="dailyChartInner" class="chart"></div>
-                </div>
-                <div id="anchorChart" class="chart-container hidden">
-                    <div class="chart-title">👤 主播退款率对比</div>
-                    <div id="anchorChartInner" class="chart"></div>
-                </div>
-                <div id="refundCurveChart" class="chart-container hidden">
-                    <div class="chart-title">📉 支付后N天退款分布</div>
-                    <div id="refundCurveChartInner" class="chart"></div>
-                </div>
-                <div id="refundTrendChart" class="chart-container hidden">
-                    <div class="chart-title">📈 7日退款趋势分析</div>
-                    <div id="refundTrendSelector" style="margin-bottom:12px;">
-                        <select id="refundTrendDateSelect" onchange="renderRefundTrendChart()" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;">
-                            <option value="">加载中...</option>
-                        </select>
+            <!-- ============ 销售分析区域 ============ -->
+            <div id="salesAnalysisSection" class="sales-analysis-section active">
+                <!-- 销售指标卡片 -->
+                <div id="salesMetricsCards" class="sales-metrics-grid hidden">
+                    <div class="sales-metric-card blue">
+                        <div class="sales-metric-value" id="totalSalesAmount">-</div>
+                        <div class="sales-metric-label">总销售额（元）</div>
                     </div>
-                    <div id="refundTrendSummary" style="font-size:13px;color:#666;margin-bottom:8px;padding:8px 12px;background:#f8fafc;border-radius:8px;"></div>
-                    <div id="refundTrendChartInner" class="chart"></div>
+                    <div class="sales-metric-card green">
+                        <div class="sales-metric-value" id="effectiveRevenue">-</div>
+                        <div class="sales-metric-label">有效收入（元）</div>
+                    </div>
+                    <div class="sales-metric-card purple">
+                        <div class="sales-metric-value" id="dailyAvgSales">-</div>
+                        <div class="sales-metric-label">日均销售额（元）</div>
+                    </div>
+                    <div class="sales-metric-card orange">
+                        <div class="sales-metric-value" id="avgOrderValue">-</div>
+                        <div class="sales-metric-label">客单价（元）</div>
+                    </div>
+                </div>
+                
+                <!-- 销售分析Tab -->
+                <div id="salesAnalysisTabs" class="tab-buttons hidden">
+                    <button class="tab-btn active" onclick="switchSalesTab('salesOverview', event)">销售总览</button>
+                    <button class="tab-btn" onclick="switchSalesTab('hourlySales', event)">时段销售</button>
+                    <button class="tab-btn" onclick="switchSalesTab('weekdaySales', event)">星期销售</button>
+                    <button class="tab-btn" onclick="switchSalesTab('dailySales', event)">日趋势</button>
+                    <button class="tab-btn" onclick="switchSalesTab('anchorSales', event)">主播销售</button>
+                    <button class="tab-btn" onclick="switchSalesTab('productStructure', event)">商品结构</button>
+                </div>
+                
+                <!-- 销售图表区域 -->
+                <div id="salesChartArea" class="hidden">
+                    <!-- 销售总览 -->
+                    <div id="salesOverviewChart" class="chart-container">
+                        <div class="chart-title">💰 有效订单 vs 退款订单金额占比</div>
+                        <div id="salesOverviewChartInner" class="chart"></div>
+                    </div>
+                    
+                    <!-- 时段销售 -->
+                    <div id="hourlySalesChart" class="chart-container hidden">
+                        <div class="chart-title">⏰ 24小时销售额与订单量分布</div>
+                        <div id="salesInsight1" class="sales-insight"></div>
+                        <div id="hourlySalesChartInner" class="chart"></div>
+                    </div>
+                    
+                    <!-- 星期销售 -->
+                    <div id="weekdaySalesChart" class="chart-container hidden">
+                        <div class="chart-title">📅 星期销售对比</div>
+                        <div id="salesInsight2" class="sales-insight"></div>
+                        <div id="weekdaySalesChartInner" class="chart"></div>
+                    </div>
+                    
+                    <!-- 日趋势 -->
+                    <div id="dailySalesChart" class="chart-container hidden">
+                        <div class="chart-title">📈 每日销售额走势</div>
+                        <div id="salesInsight3" class="sales-insight"></div>
+                        <div id="dailySalesChartInner" class="chart"></div>
+                    </div>
+                    
+                    <!-- 主播销售 -->
+                    <div id="anchorSalesChart" class="chart-container hidden">
+                        <div class="chart-title">👤 主播销售额对比</div>
+                        <div id="anchorSalesTable" style="margin-top:12px;"></div>
+                        <div id="anchorSalesChartInner" class="chart"></div>
+                    </div>
+                    
+                    <!-- 商品结构 -->
+                    <div id="productStructureChart" class="chart-container hidden">
+                        <div class="chart-title">📦 商品价格段结构分析</div>
+                        <div id="productStatsTable" class="product-stats-table"></div>
+                        <div id="productStructureChartInner" class="chart" style="margin-top:12px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ============ 退款分析区域 ============ -->
+            <div id="refundAnalysisSection" class="refund-analysis-section">
+                <!-- 退款指标卡片 -->
+                <div id="metricsCards" class="metrics-grid hidden">
+                    <div class="metric-card"><div class="metric-value" id="totalOrders">-</div><div class="metric-label">总订单数</div></div>
+                    <div class="metric-card warning"><div class="metric-value" id="refundRateDisplay">-</div><div class="metric-label">退款率</div></div>
+                    <div class="metric-card"><div class="metric-value" id="refundAmount">-</div><div class="metric-label">退款金额</div></div>
+                    <div class="metric-card success"><div class="metric-value" id="avgDailyRefund">-</div><div class="metric-label">日均退款</div></div>
+                </div>
+                
+                <!-- 退款分析Tab -->
+                <div id="analysisTabs" class="tab-buttons hidden">
+                    <button class="tab-btn active" onclick="switchRefundTab('overview', event)">退款总览</button>
+                    <button class="tab-btn" onclick="switchRefundTab('hourly', event)">时段分析</button>
+                    <button class="tab-btn" onclick="switchRefundTab('weekday', event)">星期分析</button>
+                    <button class="tab-btn" onclick="switchRefundTab('daily', event)">日趋势</button>
+                    <button class="tab-btn" onclick="switchRefundTab('anchor', event)">主播分析</button>
+                    <button class="tab-btn" onclick="switchRefundTab('refundCurve', event)">7天退款</button>
+                    <button class="tab-btn" onclick="switchRefundTab('refundTrend', event)">退款趋势</button>
+                </div>
+                
+                <!-- 退款图表区域 -->
+                <div id="chartArea" class="hidden">
+                    <div id="overviewChart" class="chart-container">
+                        <div class="chart-title">📊 退款结构分析</div>
+                        <div id="overviewChartInner" class="chart"></div>
+                    </div>
+                    <div id="hourlyChart" class="chart-container hidden">
+                        <div class="chart-title">⏰ 24小时退款分布</div>
+                        <div id="hourlyChartInner" class="chart"></div>
+                    </div>
+                    <div id="weekdayChart" class="chart-container hidden">
+                        <div class="chart-title">📅 星期退款对比</div>
+                        <div id="weekdayChartInner" class="chart"></div>
+                    </div>
+                    <div id="dailyChart" class="chart-container hidden">
+                        <div class="chart-title">📈 每日退款率走势</div>
+                        <div id="dailyChartInner" class="chart"></div>
+                    </div>
+                    <div id="anchorChart" class="chart-container hidden">
+                        <div class="chart-title">👤 主播退款率对比</div>
+                        <div id="anchorChartInner" class="chart"></div>
+                    </div>
+                    <div id="refundCurveChart" class="chart-container hidden">
+                        <div class="chart-title">📉 支付后N天退款分布</div>
+                        <div id="refundCurveChartInner" class="chart"></div>
+                    </div>
+                    <div id="refundTrendChart" class="chart-container hidden">
+                        <div class="chart-title">📈 7日退款趋势分析</div>
+                        <div id="refundTrendSelector" style="margin-bottom:12px;">
+                            <select id="refundTrendDateSelect" onchange="renderRefundTrendChart()" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;">
+                                <option value="">加载中...</option>
+                            </select>
+                        </div>
+                        <div id="refundTrendSummary" style="font-size:13px;color:#666;margin-bottom:8px;padding:8px 12px;background:#f8fafc;border-radius:8px;"></div>
+                        <div id="refundTrendChartInner" class="chart"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1047,6 +1211,13 @@
         let overviewChart = null, hourlyChart = null, weekdayChart = null;
         let dailyChart = null, anchorChart = null, refundCurveChart = null, refundTrendChart = null;
         
+        // 销售分析图表实例
+        let salesOverviewChart = null, hourlySalesChart = null, weekdaySalesChart = null;
+        let dailySalesChart = null, anchorSalesChart = null, productStructureChart = null;
+        
+        // 当前大Tab状态
+        let currentBigTab = 'sales';
+        
         // 26%生命线配置
         const LIFELINE_RATE = 26;
         const lifelineMarkLine = {
@@ -1221,6 +1392,8 @@
         
         // 手动CSV解析（处理引号内的逗号和换行）
         function parseCSVText(text) {
+            // 清除BOM头（\uFEFF），避免列名匹配失败
+            if (text.charCodeAt(0) === 0xFEFF) text = text.substring(1);
             const lines = [];
             let current = '';
             let inQuotes = false;
@@ -1432,6 +1605,46 @@
             return '非直播时段';
         }
         
+        // 识别商品类型：基础款 vs 升级款
+        function identifyProductType(order) {
+            const raw = order.raw || {};
+            const keys = Object.keys(raw);
+            
+            // 查找商品信息字段
+            let productInfo = '';
+            for (const key of keys) {
+                if (/选购商品|商品规格|商品名称|sku|产品/i.test(key)) {
+                    productInfo += ' ' + String(raw[key] || '');
+                }
+            }
+            
+            productInfo = productInfo.toLowerCase();
+            
+            // 判断价格段
+            // 基础款：59.9 或 包含"基础"、"畅学"等关键词
+            if (productInfo.includes('59.9') || 
+                /基础|畅学|体验|入门/i.test(productInfo)) {
+                return '基础款';
+            }
+            
+            // 升级款：118 或 包含"升级"、"正版"、"pro|vip|高级/i
+            if (productInfo.includes('118') || 
+                /升级|正版|pro|vip|高级|旗舰/i.test(productInfo)) {
+                return '升级款';
+            }
+            
+            // 按金额判断
+            const amount = order.amount || 0;
+            if (amount > 0 && amount <= 70) {
+                return '基础款';
+            }
+            if (amount >= 100) {
+                return '升级款';
+            }
+            
+            return '其他';
+        }
+        
         function showLoading() {
             document.getElementById('dataStatus').classList.add('hidden');
             document.getElementById('loadingStatus').classList.remove('hidden');
@@ -1439,26 +1652,17 @@
         
         function hideLoading() { document.getElementById('loadingStatus').classList.add('hidden'); }
         
-        function resetAnalysis() {
-            document.getElementById('dataStatus').classList.remove('hidden');
-            document.getElementById('metricsCards').classList.add('hidden');
-            document.getElementById('analysisTabs').classList.add('hidden');
-            document.getElementById('chartArea').classList.add('hidden');
-            
-            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart, refundTrendChart].forEach(c => {
-                if (c) c.dispose();
-            });
-            overviewChart = hourlyChart = weekdayChart = dailyChart = anchorChart = refundCurveChart = refundTrendChart = null;
-        }
-        
         function analyzeData() {
             hideLoading();
             if (parsedOrders.length === 0) { resetAnalysis(); return; }
             
             parsedOrders.forEach(order => { 
                 order.anchor = matchAnchor(order.time, order.date); 
+                // 识别商品类型
+                order.productType = identifyProductType(order);
             });
             
+            // ============ 退款分析数据 ============
             const totalOrders = parsedOrders.length;
             const refundOrders = parsedOrders.filter(o => o.isRefund).length;
             const refundRate = totalOrders > 0 ? (refundOrders / totalOrders * 100) : 0;
@@ -1472,42 +1676,122 @@
             document.getElementById('refundAmount').textContent = '¥' + refundAmount.toFixed(0);
             document.getElementById('avgDailyRefund').textContent = '¥' + (refundAmount / days).toFixed(0);
             
+            // ============ 销售分析数据 ============
+            const totalSales = parsedOrders.reduce((sum, o) => sum + o.amount, 0);
+            const effectiveRevenue = totalSales - refundAmount;
+            const dailyAvgSales = totalSales / days;
+            const avgOrderValue = totalOrders > 0 ? (totalSales / totalOrders) : 0;
+            
+            document.getElementById('totalSalesAmount').textContent = '¥' + totalSales.toFixed(0);
+            document.getElementById('effectiveRevenue').textContent = '¥' + effectiveRevenue.toFixed(0);
+            document.getElementById('dailyAvgSales').textContent = '¥' + dailyAvgSales.toFixed(0);
+            document.getElementById('avgOrderValue').textContent = '¥' + avgOrderValue.toFixed(1);
+            
             // 初始化退款趋势日期选择器
             initRefundTrendDateSelect();
             
+            // 显示所有指标卡片和Tab
             document.getElementById('metricsCards').classList.remove('hidden');
             document.getElementById('analysisTabs').classList.remove('hidden');
+            document.getElementById('salesMetricsCards').classList.remove('hidden');
+            document.getElementById('salesAnalysisTabs').classList.remove('hidden');
             document.getElementById('chartArea').classList.remove('hidden');
+            document.getElementById('salesChartArea').classList.remove('hidden');
             
-            switchTab('overview');
+            // 默认显示销售分析
+            switchBigTab('sales');
         }
         
         function switchTab(tab, evt) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            switchRefundTab(tab, evt);
+        }
+        
+        // ============ 大Tab切换 ============
+        function switchBigTab(tab) {
+            currentBigTab = tab;
+            
+            // 更新大Tab按钮状态
+            document.getElementById('salesTabBtn').classList.toggle('active', tab === 'sales');
+            document.getElementById('refundTabBtn').classList.toggle('active', tab === 'refund');
+            
+            // 显示/隐藏对应区域
+            document.getElementById('salesAnalysisSection').classList.toggle('active', tab === 'sales');
+            document.getElementById('refundAnalysisSection').classList.toggle('active', tab === 'refund');
+            
+            // 触发对应区域的第一个Tab
+            if (tab === 'sales') {
+                switchSalesTab('salesOverview');
+            } else {
+                switchRefundTab('overview');
+            }
+            
+            // 触发图表resize
+            setTimeout(() => {
+                [salesOverviewChart, hourlySalesChart, weekdaySalesChart, dailySalesChart, anchorSalesChart, productStructureChart].forEach(c => { if (c) c.resize(); });
+                [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart, refundTrendChart].forEach(c => { if (c) c.resize(); });
+            }, 100);
+        }
+        
+        // ============ 销售分析Tab切换 ============
+        function switchSalesTab(tab, evt) {
+            // 更新Tab按钮状态
+            document.querySelectorAll('#salesAnalysisTabs .tab-btn').forEach(btn => btn.classList.remove('active'));
             if (evt && evt.target) {
                 evt.target.classList.add('active');
             } else {
-                const tabBtns = document.querySelectorAll('.tab-btn');
-                const tabMap = { overview: 0, hourly: 1, weekday: 2, daily: 3, anchor: 4, refundCurve: 5, refundTrend: 6 };
+                const tabMap = { salesOverview: 0, hourlySales: 1, weekdaySales: 2, dailySales: 3, anchorSales: 4, productStructure: 5 };
+                const tabBtns = document.querySelectorAll('#salesAnalysisTabs .tab-btn');
                 if (tabBtns[tabMap[tab]]) tabBtns[tabMap[tab]].classList.add('active');
             }
             
+            // 隐藏所有图表
+            ['salesOverviewChart', 'hourlySalesChart', 'weekdaySalesChart', 'dailySalesChart', 'anchorSalesChart', 'productStructureChart'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            
+            switch(tab) {
+                case 'salesOverview': document.getElementById('salesOverviewChart').classList.remove('hidden'); renderSalesOverviewChart(); break;
+                case 'hourlySales': document.getElementById('hourlySalesChart').classList.remove('hidden'); renderHourlySalesChart(); break;
+                case 'weekdaySales': document.getElementById('weekdaySalesChart').classList.remove('hidden'); renderWeekdaySalesChart(); break;
+                case 'dailySales': document.getElementById('dailySalesChart').classList.remove('hidden'); renderDailySalesChart(); break;
+                case 'anchorSales': document.getElementById('anchorSalesChart').classList.remove('hidden'); renderAnchorSalesChart(); break;
+                case 'productStructure': document.getElementById('productStructureChart').classList.remove('hidden'); renderProductStructureChart(); break;
+            }
+        }
+        
+        // ============ 退款分析Tab切换 ============
+        function switchRefundTab(tab, evt) {
+            // 更新Tab按钮状态
+            document.querySelectorAll('#analysisTabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            } else {
+                const tabMap = { overview: 0, hourly: 1, weekday: 2, daily: 3, anchor: 4, refundCurve: 5, refundTrend: 6 };
+                const tabBtns = document.querySelectorAll('#analysisTabs .tab-btn');
+                if (tabBtns[tabMap[tab]]) tabBtns[tabMap[tab]].classList.add('active');
+            }
+            
+            // 隐藏所有图表
             ['overviewChart', 'hourlyChart', 'weekdayChart', 'dailyChart', 'anchorChart', 'refundCurveChart', 'refundTrendChart'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             
             switch(tab) {
-                case 'overview': document.getElementById('overviewChart').classList.remove('hidden'); renderOverviewChart(); break;
-                case 'hourly': document.getElementById('hourlyChart').classList.remove('hidden'); renderHourlyChart(); break;
-                case 'weekday': document.getElementById('weekdayChart').classList.remove('hidden'); renderWeekdayChart(); break;
-                case 'daily': document.getElementById('dailyChart').classList.remove('hidden'); renderDailyChart(); break;
-                case 'anchor': document.getElementById('anchorChart').classList.remove('hidden'); renderAnchorChart(); break;
+                case 'overview': document.getElementById('overviewChart').classList.remove('hidden'); renderRefundOverviewChart(); break;
+                case 'hourly': document.getElementById('hourlyChart').classList.remove('hidden'); renderRefundHourlyChart(); break;
+                case 'weekday': document.getElementById('weekdayChart').classList.remove('hidden'); renderRefundWeekdayChart(); break;
+                case 'daily': document.getElementById('dailyChart').classList.remove('hidden'); renderRefundDailyChart(); break;
+                case 'anchor': document.getElementById('anchorChart').classList.remove('hidden'); renderRefundAnchorChart(); break;
                 case 'refundCurve': document.getElementById('refundCurveChart').classList.remove('hidden'); renderRefundCurveChart(); break;
                 case 'refundTrend': document.getElementById('refundTrendChart').classList.remove('hidden'); renderRefundTrendChart(); break;
             }
         }
         
         function renderOverviewChart() {
+            renderRefundOverviewChart();
+        }
+        
+        function renderRefundOverviewChart() {
             const container = document.getElementById('overviewChartInner');
             if (!container) return;
             if (overviewChart) overviewChart.dispose();
@@ -1529,7 +1813,37 @@
             });
         }
         
+        // ============ 销售分析 - 销售总览 ============
+        function renderSalesOverviewChart() {
+            const container = document.getElementById('salesOverviewChartInner');
+            if (!container) return;
+            if (salesOverviewChart) salesOverviewChart.dispose();
+            salesOverviewChart = echarts.init(container);
+            
+            const totalSales = parsedOrders.reduce((sum, o) => sum + o.amount, 0);
+            const refundAmount = parsedOrders.filter(o => o.isRefund).reduce((sum, o) => sum + o.amount, 0);
+            const validSales = totalSales - refundAmount;
+            
+            salesOverviewChart.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
+                legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#666' } },
+                series: [{
+                    type: 'pie', radius: ['40%', '70%'], center: ['35%', '50%'],
+                    label: { show: false },
+                    emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                    data: [
+                        { value: validSales.toFixed(2), name: '有效收入', itemStyle: { color: '#10b981' } },
+                        { value: refundAmount.toFixed(2), name: '退款金额', itemStyle: { color: '#ef4444' } }
+                    ]
+                }]
+            });
+        }
+        
         function renderHourlyChart() {
+            renderRefundHourlyChart();
+        }
+        
+        function renderRefundHourlyChart() {
             const container = document.getElementById('hourlyChartInner');
             if (!container) return;
             if (hourlyChart) hourlyChart.dispose();
@@ -1608,7 +1922,102 @@
             });
         }
         
+        // ============ 销售分析 - 时段销售 ============
+        function renderHourlySalesChart() {
+            const container = document.getElementById('hourlySalesChartInner');
+            if (!container) return;
+            if (hourlySalesChart) hourlySalesChart.dispose();
+            hourlySalesChart = echarts.init(container);
+            
+            const hourlyData = {};
+            for (let i = 0; i < 24; i++) hourlyData[i] = { sales: 0, count: 0 };
+            
+            parsedOrders.forEach(order => {
+                if (order.time && !isNaN(order.time.getTime())) {
+                    const hour = order.time.getHours();
+                    hourlyData[hour].sales += order.amount;
+                    hourlyData[hour].count++;
+                }
+            });
+            
+            const hours = [], salesData = [], countData = [];
+            for (let i = 0; i < 24; i++) {
+                hours.push(i + '时');
+                salesData.push(hourlyData[i].sales.toFixed(2));
+                countData.push(hourlyData[i].count);
+            }
+            
+            // 找出销售高峰
+            let maxSales = 0, maxHour = 0;
+            for (let i = 0; i < 24; i++) {
+                if (hourlyData[i].sales > maxSales) {
+                    maxSales = hourlyData[i].sales;
+                    maxHour = i;
+                }
+            }
+            
+            const insightEl = document.getElementById('salesInsight1');
+            if (insightEl) {
+                insightEl.innerHTML = `📊 销售高峰时段: <strong>${maxHour}:00-${maxHour+1}:00</strong>，销售额 ¥${maxSales.toFixed(0)}`;
+            }
+            
+            hourlySalesChart.setOption({
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'cross' },
+                    formatter: function(params) {
+                        let result = '<strong>' + params[0].name + '</strong><br/>';
+                        params.forEach(p => {
+                            if (p.seriesName === '销售额') {
+                                result += p.marker + ' ' + p.seriesName + ': ¥' + p.value + '<br/>';
+                            } else {
+                                result += p.marker + ' ' + p.seriesName + ': ' + p.value + ' 单<br/>';
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: { data: ['销售额', '订单量'], top: 0, textStyle: { color: '#666', fontSize: 12 } },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '45px', containLabel: true },
+                xAxis: { type: 'category', data: hours, axisLabel: { color: '#666', interval: 2 } },
+                yAxis: [
+                    { type: 'value', name: '销售额', axisLabel: { color: '#666', formatter: '¥{value}' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
+                    { type: 'value', name: '订单量', axisLabel: { color: '#666' }, splitLine: { show: false } }
+                ],
+                series: [
+                    { 
+                        name: '销售额', 
+                        type: 'line', 
+                        data: salesData, 
+                        itemStyle: { color: '#3b82f6' }, 
+                        smooth: true,
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(59, 130, 246, 0.3)' },
+                                { offset: 1, color: 'rgba(59, 130, 246, 0.05)' }
+                            ])
+                        },
+                        markPoint: {
+                            data: [{ type: 'max', name: '高峰' }],
+                            label: { formatter: '高峰', color: '#ef4444' }
+                        }
+                    },
+                    { 
+                        name: '订单量', 
+                        type: 'bar', 
+                        data: countData,
+                        yAxisIndex: 1,
+                        itemStyle: { color: 'rgba(59, 130, 246, 0.3)' }
+                    }
+                ]
+            });
+        }
+        
         function renderWeekdayChart() {
+            renderRefundWeekdayChart();
+        }
+        
+        function renderRefundWeekdayChart() {
             const container = document.getElementById('weekdayChartInner');
             if (!container) return;
             if (weekdayChart) weekdayChart.dispose();
@@ -1671,7 +2080,72 @@
             });
         }
         
+        // ============ 销售分析 - 星期销售 ============
+        function renderWeekdaySalesChart() {
+            const container = document.getElementById('weekdaySalesChartInner');
+            if (!container) return;
+            if (weekdaySalesChart) weekdaySalesChart.dispose();
+            weekdaySalesChart = echarts.init(container);
+            
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const weekdayData = weekdays.map(() => ({ sales: 0, count: 0 }));
+            
+            parsedOrders.forEach(order => {
+                if (order.time && !isNaN(order.time.getTime())) {
+                    const day = order.time.getDay();
+                    weekdayData[day].sales += order.amount;
+                    weekdayData[day].count++;
+                }
+            });
+            
+            const salesData = weekdayData.map(d => d.sales.toFixed(2));
+            
+            // 找出最高和最低
+            let maxSales = 0, minSales = Infinity, maxIdx = 0, minIdx = 0;
+            for (let i = 0; i < 7; i++) {
+                if (weekdayData[i].sales > maxSales) {
+                    maxSales = weekdayData[i].sales;
+                    maxIdx = i;
+                }
+                if (weekdayData[i].sales > 0 && weekdayData[i].sales < minSales) {
+                    minSales = weekdayData[i].sales;
+                    minIdx = i;
+                }
+            }
+            
+            const insightEl = document.getElementById('salesInsight2');
+            if (insightEl) {
+                insightEl.innerHTML = `📊 销售最高: <strong>${weekdays[maxIdx]}</strong> (¥${maxSales.toFixed(0)})，销售最低: <strong>${weekdays[minIdx]}</strong> (¥${minSales.toFixed(0)})`;
+            }
+            
+            weekdaySalesChart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: ¥{c}' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: weekdays, axisLabel: { color: '#666' } },
+                yAxis: { type: 'value', name: '销售额', axisLabel: { color: '#666', formatter: '¥{value}' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
+                series: [{
+                    type: 'bar', 
+                    data: salesData,
+                    itemStyle: { 
+                        color: function(p) {
+                            return p.dataIndex === maxIdx ? '#10b981' : '#8b5cf6';
+                        }
+                    },
+                    markPoint: {
+                        data: [
+                            { type: 'max', name: '最高' },
+                            { type: 'min', name: '最低' }
+                        ]
+                    }
+                }]
+            });
+        }
+        
         function renderDailyChart() {
+            renderRefundDailyChart();
+        }
+        
+        function renderRefundDailyChart() {
             const container = document.getElementById('dailyChartInner');
             if (!container) return;
             if (dailyChart) dailyChart.dispose();
@@ -1744,7 +2218,83 @@
             });
         }
         
+        // ============ 销售分析 - 日趋势 ============
+        function renderDailySalesChart() {
+            const container = document.getElementById('dailySalesChartInner');
+            if (!container) return;
+            if (dailySalesChart) dailySalesChart.dispose();
+            dailySalesChart = echarts.init(container);
+            
+            const dailyData = {};
+            parsedOrders.forEach(order => {
+                if (order.date) {
+                    if (!dailyData[order.date]) dailyData[order.date] = { sales: 0, refund: 0 };
+                    dailyData[order.date].sales += order.amount;
+                    if (order.isRefund) dailyData[order.date].refund += order.amount;
+                }
+            });
+            
+            const sortedDates = Object.keys(dailyData).sort();
+            const dates = sortedDates.map(d => d.slice(5));
+            const salesData = sortedDates.map(d => dailyData[d].sales.toFixed(2));
+            const validRevenueData = sortedDates.map(d => (dailyData[d].sales - dailyData[d].refund).toFixed(2));
+            
+            const insightEl = document.getElementById('salesInsight3');
+            if (insightEl) {
+                const totalSales = sortedDates.reduce((sum, d) => sum + dailyData[d].sales, 0);
+                const totalRefund = sortedDates.reduce((sum, d) => sum + dailyData[d].refund, 0);
+                const avgDailySales = totalSales / sortedDates.length;
+                const avgDailyValid = (totalSales - totalRefund) / sortedDates.length;
+                insightEl.innerHTML = `📊 日均销售额: <strong>¥${avgDailySales.toFixed(0)}</strong>，日均有效收入: <strong>¥${avgDailyValid.toFixed(0)}</strong>`;
+            }
+            
+            dailySalesChart.setOption({
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'cross' },
+                    formatter: function(params) {
+                        let result = '<strong>' + params[0].name + '</strong><br/>';
+                        params.forEach(p => {
+                            result += p.marker + ' ' + p.seriesName + ': ¥' + p.value + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: { data: ['销售额', '有效收入'], top: 0, textStyle: { color: '#666', fontSize: 12 } },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '45px', containLabel: true },
+                xAxis: { type: 'category', data: dates, axisLabel: { color: '#666', rotate: 45 } },
+                yAxis: { type: 'value', name: '金额', axisLabel: { color: '#666', formatter: '¥{value}' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
+                series: [
+                    { 
+                        name: '销售额', 
+                        type: 'line', 
+                        data: salesData, 
+                        itemStyle: { color: '#3b82f6' }, 
+                        smooth: true,
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(59, 130, 246, 0.3)' },
+                                { offset: 1, color: 'rgba(59, 130, 246, 0.05)' }
+                            ])
+                        }
+                    },
+                    { 
+                        name: '有效收入', 
+                        type: 'line', 
+                        data: validRevenueData, 
+                        itemStyle: { color: '#10b981' }, 
+                        smooth: true,
+                        lineStyle: { width: 3 }
+                    }
+                ]
+            });
+        }
+        
         function renderAnchorChart() {
+            renderRefundAnchorChart();
+        }
+        
+        function renderRefundAnchorChart() {
             const container = document.getElementById('anchorChartInner');
             if (!container) return;
             if (anchorChart) anchorChart.dispose();
@@ -1804,6 +2354,107 @@
                             lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
                             label: { formatter: '生命线 26%', position: 'insideEndTop', color: '#ef4444', fontWeight: 'bold' }
                         }
+                    }
+                ]
+            });
+        }
+        
+        // ============ 销售分析 - 主播销售 ============
+        function renderAnchorSalesChart() {
+            const container = document.getElementById('anchorSalesChartInner');
+            const tableContainer = document.getElementById('anchorSalesTable');
+            if (!container) return;
+            if (anchorSalesChart) anchorSalesChart.dispose();
+            anchorSalesChart = echarts.init(container);
+            
+            const anchorData = {};
+            parsedOrders.forEach(order => {
+                const name = order.anchor || '非直播时段';
+                if (!anchorData[name]) anchorData[name] = { sales: 0, count: 0 };
+                anchorData[name].sales += order.amount;
+                anchorData[name].count++;
+            });
+            
+            // 按销售额排序
+            const anchors = Object.keys(anchorData).sort((a, b) => anchorData[b].sales - anchorData[a].sales);
+            if (anchors.length === 0) {
+                anchorSalesChart.setOption({ title: { text: '暂无主播数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } } });
+                return;
+            }
+            
+            const salesData = anchors.map(a => anchorData[a].sales.toFixed(2));
+            const countData = anchors.map(a => anchorData[a].count);
+            const avgValues = anchors.map(a => anchorData[a].count > 0 ? (anchorData[a].sales / anchorData[a].count).toFixed(1) : '0');
+            
+            // 生成表格
+            if (tableContainer) {
+                tableContainer.innerHTML = `
+                    <table class="product-stats-table">
+                        <thead>
+                            <tr>
+                                <th>主播</th>
+                                <th>销售额</th>
+                                <th>订单量</th>
+                                <th>客单价</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${anchors.map(a => `
+                                <tr>
+                                    <td><span class="product-tag ${a === '非直播时段' ? 'other' : 'basic'}">${a}</span></td>
+                                    <td>¥${anchorData[a].sales.toFixed(0)}</td>
+                                    <td>${anchorData[a].count} 单</td>
+                                    <td>¥${anchorData[a].count > 0 ? (anchorData[a].sales / anchorData[a].count).toFixed(1) : '0'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+            
+            anchorSalesChart.setOption({
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'shadow' },
+                    formatter: function(params) {
+                        let result = '<strong>' + params[0].name + '</strong><br/>';
+                        params.forEach(p => {
+                            if (p.seriesName === '销售额') {
+                                result += p.marker + ' ' + p.seriesName + ': ¥' + p.value + '<br/>';
+                            } else {
+                                result += p.marker + ' ' + p.seriesName + ': ' + p.value + ' 单<br/>';
+                            }
+                        });
+                        const idx = anchors.indexOf(params[0].name);
+                        if (idx >= 0) {
+                            result += '<span style="color:#999;font-size:11px;">客单价: ¥' + avgValues[idx] + '</span>';
+                        }
+                        return result;
+                    }
+                },
+                legend: { data: ['销售额', '订单量'], top: 0, textStyle: { color: '#666', fontSize: 12 } },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '45px', containLabel: true },
+                xAxis: { type: 'category', data: anchors, axisLabel: { color: '#666' } },
+                yAxis: [
+                    { type: 'value', name: '销售额', axisLabel: { color: '#666', formatter: '¥{value}' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
+                    { type: 'value', name: '订单量', axisLabel: { color: '#666' }, splitLine: { show: false } }
+                ],
+                series: [
+                    { 
+                        name: '销售额', 
+                        type: 'bar', 
+                        data: salesData,
+                        itemStyle: { color: '#3b82f6' },
+                        markPoint: {
+                            data: [{ type: 'max', name: '最高' }]
+                        }
+                    },
+                    { 
+                        name: '订单量', 
+                        type: 'bar', 
+                        data: countData,
+                        yAxisIndex: 1,
+                        itemStyle: { color: 'rgba(59, 130, 246, 0.3)' }
                     }
                 ]
             });
@@ -2050,7 +2701,133 @@
             });
         }
         
+        // ============ 销售分析 - 商品结构 ============
+        function renderProductStructureChart() {
+            const container = document.getElementById('productStructureChartInner');
+            const tableContainer = document.getElementById('productStatsTable');
+            if (!container) return;
+            if (productStructureChart) productStructureChart.dispose();
+            productStructureChart = echarts.init(container);
+            
+            // 统计商品结构
+            const productData = {
+                '基础款': { sales: 0, count: 0 },
+                '升级款': { sales: 0, count: 0 },
+                '其他': { sales: 0, count: 0 }
+            };
+            
+            // 收集所有不同的商品价格
+            const priceGroups = {};
+            
+            parsedOrders.forEach(order => {
+                const type = order.productType || '其他';
+                if (!productData[type]) productData[type] = { sales: 0, count: 0 };
+                productData[type].sales += order.amount;
+                productData[type].count++;
+                
+                // 按实际金额分组
+                const priceKey = order.amount.toFixed(1);
+                if (!priceGroups[priceKey]) priceGroups[priceKey] = { sales: 0, count: 0, type: type };
+                priceGroups[priceKey].sales += order.amount;
+                priceGroups[priceKey].count++;
+            });
+            
+            const totalSales = parsedOrders.reduce((sum, o) => sum + o.amount, 0);
+            const totalCount = parsedOrders.length;
+            
+            // 生成表格
+            if (tableContainer) {
+                const rows = Object.entries(productData)
+                    .filter(([_, data]) => data.count > 0)
+                    .map(([type, data]) => {
+                        const tagClass = type === '基础款' ? 'basic' : (type === '升级款' ? 'upgrade' : 'other');
+                        const avgPrice = data.count > 0 ? (data.sales / data.count).toFixed(1) : '0';
+                        return `
+                            <tr>
+                                <td><span class="product-tag ${tagClass}">${type}</span></td>
+                                <td>¥${data.sales.toFixed(0)}</td>
+                                <td>${(data.sales / totalSales * 100).toFixed(1)}%</td>
+                                <td>${data.count} 单</td>
+                                <td>${(data.count / totalCount * 100).toFixed(1)}%</td>
+                                <td>¥${avgPrice}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                
+                tableContainer.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>销售额</th>
+                            <th>金额占比</th>
+                            <th>订单量</th>
+                            <th>订单占比</th>
+                            <th>均价</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                `;
+            }
+            
+            // 生成饼图数据
+            const pieData = Object.entries(productData)
+                .filter(([_, data]) => data.count > 0)
+                .map(([type, data]) => ({
+                    name: type,
+                    value: data.sales.toFixed(2),
+                    itemStyle: {
+                        color: type === '基础款' ? '#3b82f6' : (type === '升级款' ? '#8b5cf6' : '#6b7280')
+                    }
+                }));
+            
+            productStructureChart.setOption({
+                tooltip: { 
+                    trigger: 'item', 
+                    formatter: function(params) {
+                        return '<strong>' + params.name + '</strong><br/>' +
+                               '销售额: ¥' + params.value + '<br/>' +
+                               '占比: ' + params.percent.toFixed(1) + '%';
+                    }
+                },
+                legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#666' } },
+                series: [{
+                    type: 'pie', 
+                    radius: ['35%', '65%'], 
+                    center: ['35%', '50%'],
+                    label: { show: false },
+                    emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                    data: pieData
+                }]
+            });
+        }
+        
+        // 重置分析
+        function resetAnalysis() {
+            document.getElementById('dataStatus').classList.remove('hidden');
+            document.getElementById('metricsCards').classList.add('hidden');
+            document.getElementById('analysisTabs').classList.add('hidden');
+            document.getElementById('chartArea').classList.add('hidden');
+            document.getElementById('salesMetricsCards').classList.add('hidden');
+            document.getElementById('salesAnalysisTabs').classList.add('hidden');
+            document.getElementById('salesChartArea').classList.add('hidden');
+            
+            // 销毁销售分析图表
+            [salesOverviewChart, hourlySalesChart, weekdaySalesChart, dailySalesChart, anchorSalesChart, productStructureChart].forEach(c => {
+                if (c) c.dispose();
+            });
+            salesOverviewChart = hourlySalesChart = weekdaySalesChart = dailySalesChart = anchorSalesChart = productStructureChart = null;
+            
+            // 销毁退款分析图表
+            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart, refundTrendChart].forEach(c => {
+                if (c) c.dispose();
+            });
+            overviewChart = hourlyChart = weekdayChart = dailyChart = anchorChart = refundCurveChart = refundTrendChart = null;
+        }
+        
         window.addEventListener('resize', () => {
+            [salesOverviewChart, hourlySalesChart, weekdaySalesChart, dailySalesChart, anchorSalesChart, productStructureChart].forEach(c => { if (c) c.resize(); });
             [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart, refundTrendChart].forEach(c => { if (c) c.resize(); });
         });
     </script>
