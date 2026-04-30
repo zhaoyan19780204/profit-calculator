@@ -594,6 +594,7 @@
                 <button class="tab-btn" onclick="switchTab('daily', event)">日趋势</button>
                 <button class="tab-btn" onclick="switchTab('anchor', event)">主播分析</button>
                 <button class="tab-btn" onclick="switchTab('refundCurve', event)">7天退款</button>
+                <button class="tab-btn" onclick="switchTab('refundTrend', event)">退款趋势</button>
             </div>
             
             <div id="chartArea" class="hidden">
@@ -620,6 +621,16 @@
                 <div id="refundCurveChart" class="chart-container hidden">
                     <div class="chart-title">📉 支付后N天退款分布</div>
                     <div id="refundCurveChartInner" class="chart"></div>
+                </div>
+                <div id="refundTrendChart" class="chart-container hidden">
+                    <div class="chart-title">📈 7日退款趋势分析</div>
+                    <div id="refundTrendSelector" style="margin-bottom:12px;">
+                        <select id="refundTrendDateSelect" onchange="renderRefundTrendChart()" style="width:100%;padding:10px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;">
+                            <option value="">加载中...</option>
+                        </select>
+                    </div>
+                    <div id="refundTrendSummary" style="font-size:13px;color:#666;margin-bottom:8px;padding:8px 12px;background:#f8fafc;border-radius:8px;"></div>
+                    <div id="refundTrendChartInner" class="chart"></div>
                 </div>
             </div>
         </div>
@@ -1034,7 +1045,7 @@
         let uploadedFiles = []; // 存储已上传的文件信息
         
         let overviewChart = null, hourlyChart = null, weekdayChart = null;
-        let dailyChart = null, anchorChart = null, refundCurveChart = null;
+        let dailyChart = null, anchorChart = null, refundCurveChart = null, refundTrendChart = null;
         
         // 26%生命线配置
         const LIFELINE_RATE = 26;
@@ -1434,10 +1445,10 @@
             document.getElementById('analysisTabs').classList.add('hidden');
             document.getElementById('chartArea').classList.add('hidden');
             
-            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart].forEach(c => {
+            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart, refundTrendChart].forEach(c => {
                 if (c) c.dispose();
             });
-            overviewChart = hourlyChart = weekdayChart = dailyChart = anchorChart = refundCurveChart = null;
+            overviewChart = hourlyChart = weekdayChart = dailyChart = anchorChart = refundCurveChart = refundTrendChart = null;
         }
         
         function analyzeData() {
@@ -1461,6 +1472,9 @@
             document.getElementById('refundAmount').textContent = '¥' + refundAmount.toFixed(0);
             document.getElementById('avgDailyRefund').textContent = '¥' + (refundAmount / days).toFixed(0);
             
+            // 初始化退款趋势日期选择器
+            initRefundTrendDateSelect();
+            
             document.getElementById('metricsCards').classList.remove('hidden');
             document.getElementById('analysisTabs').classList.remove('hidden');
             document.getElementById('chartArea').classList.remove('hidden');
@@ -1474,11 +1488,11 @@
                 evt.target.classList.add('active');
             } else {
                 const tabBtns = document.querySelectorAll('.tab-btn');
-                const tabMap = { overview: 0, hourly: 1, weekday: 2, daily: 3, anchor: 4, refundCurve: 5 };
+                const tabMap = { overview: 0, hourly: 1, weekday: 2, daily: 3, anchor: 4, refundCurve: 5, refundTrend: 6 };
                 if (tabBtns[tabMap[tab]]) tabBtns[tabMap[tab]].classList.add('active');
             }
             
-            ['overviewChart', 'hourlyChart', 'weekdayChart', 'dailyChart', 'anchorChart', 'refundCurveChart'].forEach(id => {
+            ['overviewChart', 'hourlyChart', 'weekdayChart', 'dailyChart', 'anchorChart', 'refundCurveChart', 'refundTrendChart'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             
@@ -1489,6 +1503,7 @@
                 case 'daily': document.getElementById('dailyChart').classList.remove('hidden'); renderDailyChart(); break;
                 case 'anchor': document.getElementById('anchorChart').classList.remove('hidden'); renderAnchorChart(); break;
                 case 'refundCurve': document.getElementById('refundCurveChart').classList.remove('hidden'); renderRefundCurveChart(); break;
+                case 'refundTrend': document.getElementById('refundTrendChart').classList.remove('hidden'); renderRefundTrendChart(); break;
             }
         }
         
@@ -1841,8 +1856,202 @@
             });
         }
         
+        // 初始化退款趋势日期选择器
+        function initRefundTrendDateSelect() {
+            const select = document.getElementById('refundTrendDateSelect');
+            if (!select) return;
+            
+            const datesWithRefunds = new Set();
+            const allDates = new Set();
+            
+            parsedOrders.forEach(order => {
+                if (order.date) {
+                    allDates.add(order.date);
+                    if (order.isRefund) {
+                        datesWithRefunds.add(order.date);
+                    }
+                }
+            });
+            
+            const sortedDates = [...allDates].sort();
+            
+            if (sortedDates.length === 0) {
+                select.innerHTML = '<option value="">暂无数据</option>';
+                return;
+            }
+            
+            const datesWithRefundSorted = [...datesWithRefunds].sort();
+            let defaultDate = sortedDates[0];
+            if (datesWithRefundSorted.length > 0) {
+                defaultDate = datesWithRefundSorted[0];
+            }
+            
+            select.innerHTML = sortedDates.map(date => {
+                const shortDate = date.replace('2026-', '').replace('2025-', '');
+                const hasRefund = datesWithRefunds.has(date) ? ' (有退款)' : '';
+                return `<option value="${date}" ${date === defaultDate ? 'selected' : ''}>${shortDate}${hasRefund}</option>`;
+            }).join('');
+        }
+        
+        function renderRefundTrendChart() {
+            const container = document.getElementById('refundTrendChartInner');
+            const select = document.getElementById('refundTrendDateSelect');
+            const summaryEl = document.getElementById('refundTrendSummary');
+            
+            if (!container) return;
+            if (refundTrendChart) refundTrendChart.dispose();
+            refundTrendChart = echarts.init(container);
+            
+            const selectedDate = select ? select.value : null;
+            
+            if (!selectedDate) {
+                refundTrendChart.setOption({ 
+                    title: { text: '请选择要分析的日期', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 }, textAlign: 'center' } 
+                });
+                if (summaryEl) summaryEl.textContent = '';
+                return;
+            }
+            
+            const dateOrders = parsedOrders.filter(o => o.date === selectedDate);
+            const totalOrders = dateOrders.length;
+            
+            if (totalOrders === 0) {
+                refundTrendChart.setOption({ 
+                    title: { text: '该日期暂无订单数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 }, textAlign: 'center' } 
+                });
+                if (summaryEl) summaryEl.textContent = '';
+                return;
+            }
+            
+            const dayDistribution = {};
+            for (let i = 0; i <= 7; i++) {
+                dayDistribution[i] = 0;
+            }
+            
+            dateOrders.forEach(order => {
+                if (order.isRefund && order.refundDays >= 0 && order.refundDays <= 7) {
+                    dayDistribution[order.refundDays]++;
+                }
+            });
+            
+            const days = ['第0天', '第1天', '第2天', '第3天', '第4天', '第5天', '第6天', '第7天'];
+            const dailyCounts = [];
+            const dailyRates = [];
+            const cumulativeCounts = [];
+            const cumulativeRates = [];
+            
+            let cumCount = 0;
+            for (let i = 0; i <= 7; i++) {
+                dailyCounts.push(dayDistribution[i]);
+                cumCount += dayDistribution[i];
+                cumulativeCounts.push(cumCount);
+                dailyRates.push(totalOrders > 0 ? (dayDistribution[i] / totalOrders * 100).toFixed(2) : 0);
+                cumulativeRates.push(totalOrders > 0 ? (cumCount / totalOrders * 100).toFixed(2) : 0);
+            }
+            
+            const total7DayRefunds = cumulativeCounts[7];
+            const total7DayRate = totalOrders > 0 ? (total7DayRefunds / totalOrders * 100).toFixed(2) : 0;
+            
+            if (summaryEl) {
+                summaryEl.innerHTML = `<strong>${selectedDate.replace('2026-', '').replace('2025-', '')}</strong> 共 <strong>${totalOrders}</strong> 单，` +
+                    `7天内累计退款 <strong>${total7DayRefunds}</strong> 单，累计退款率 <strong>${total7DayRate}%</strong>`;
+            }
+            
+            if (total7DayRefunds === 0) {
+                refundTrendChart.setOption({ 
+                    title: { text: '该日期暂无退款数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 }, textAlign: 'center' } 
+                });
+                return;
+            }
+            
+            // 找出高峰和低谷
+            const maxCount = Math.max(...dailyCounts);
+            const minCount = Math.min(...dailyCounts.filter(c => c > 0));
+            const maxIdx = dailyCounts.indexOf(maxCount);
+            const minIdx = dailyCounts.lastIndexOf(minCount);
+            
+            refundTrendChart.setOption({
+                tooltip: { 
+                    trigger: 'axis', 
+                    axisPointer: { type: 'cross' },
+                    formatter: function(params) {
+                        let result = '<strong>' + params[0].name + '</strong><br/>';
+                        params.forEach(p => {
+                            if (p.seriesName === '当日退款率' || p.seriesName === '累计退款率') {
+                                result += p.marker + ' ' + p.seriesName + ': ' + p.value + '%<br/>';
+                            } else {
+                                result += p.marker + ' ' + p.seriesName + ': ' + p.value + ' 单<br/>';
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['当日退款数', '累计退款数', '当日退款率', '累计退款率'],
+                    top: 0,
+                    textStyle: { color: '#666', fontSize: 11 }
+                },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '40px', containLabel: true },
+                xAxis: { 
+                    type: 'category', 
+                    data: days, 
+                    axisLabel: { color: '#666' } 
+                },
+                yAxis: [
+                    { type: 'value', name: '退款数', axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
+                    { type: 'value', name: '退款率%', max: 100, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } }
+                ],
+                series: [
+                    { 
+                        name: '当日退款数', 
+                        type: 'bar', 
+                        data: dailyCounts,
+                        itemStyle: { color: '#667eea' },
+                        markPoint: {
+                            data: [
+                                { type: 'max', name: '高峰', label: { formatter: '高峰', color: '#ef4444', fontWeight: 'bold' }, symbolSize: 50 },
+                                { type: 'min', name: '低谷', label: { formatter: '低谷', color: '#10b981', fontWeight: 'bold' }, symbolSize: 50 }
+                            ]
+                        }
+                    },
+                    { 
+                        name: '累计退款数', 
+                        type: 'line', 
+                        data: cumulativeCounts,
+                        yAxisIndex: 0,
+                        itemStyle: { color: '#f59e0b' },
+                        smooth: true
+                    },
+                    { 
+                        name: '当日退款率', 
+                        type: 'line', 
+                        data: dailyRates,
+                        yAxisIndex: 1,
+                        itemStyle: { color: '#10b981' },
+                        smooth: true,
+                        lineStyle: { width: 2 }
+                    },
+                    { 
+                        name: '累计退款率', 
+                        type: 'line', 
+                        data: cumulativeRates,
+                        yAxisIndex: 1,
+                        itemStyle: { color: '#ef4444' },
+                        smooth: true,
+                        lineStyle: { width: 3 },
+                        markLine: {
+                            symbol: 'none',
+                            data: [{ yAxis: parseFloat(total7DayRate), name: '平均退款率 ' + total7DayRate + '%' }],
+                            lineStyle: { color: '#9333ea', type: 'dashed', width: 2 },
+                            label: { formatter: '平均退款率 ' + total7DayRate + '%', position: 'insideEndTop', color: '#9333ea', fontWeight: 'bold' }
+                        }
+                    }
+                ]
+            });
+        }
+        
         window.addEventListener('resize', () => {
-            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart].forEach(c => { if (c) c.resize(); });
+            [overviewChart, hourlyChart, weekdayChart, dailyChart, anchorChart, refundCurveChart, refundTrendChart].forEach(c => { if (c) c.resize(); });
         });
     </script>
 </body>
