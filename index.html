@@ -1380,6 +1380,7 @@
             // 逐个处理文件
             let processedCount = 0;
             let allJsonData = orderData ? [...orderData] : [];
+            let allFileJsonData = [];  // 每个文件单独的JSON数据
             let allFileInfos = [...uploadedFiles];
             
             Array.from(files).forEach((file, index) => {
@@ -1460,7 +1461,8 @@
                         }
                         
                         if (jsonData && jsonData.length > 0) {
-                            // 合并数据
+                            // 记录每个文件的数据（单独保存，后续单独解析）
+                            allFileJsonData.push({ name: file.name, data: jsonData });
                             allJsonData = allJsonData.concat(jsonData);
                             allFileInfos.push({ name: file.name, count: jsonData.length });
                         }
@@ -1485,10 +1487,12 @@
                     return;
                 }
                 
-                // 更新数据
+                // 每个文件单独解析再合并（避免不同列名的文件合并后字段匹配失败）
                 orderData = allJsonData;
                 uploadedFiles = allFileInfos;
-                parsedOrders = parseOrderData(orderData);
+                // 先按文件分组解析，再合并parsedOrders
+                const perFileOrders = allFileJsonData.map(fd => parseOrderData(fd.data));
+                parsedOrders = perFileOrders.reduce((acc, arr) => acc.concat(arr), []);
                 
                 // 显示已上传文件信息
                 document.getElementById('orderFileInfo').innerHTML = uploadedFiles.map(f => 
@@ -2134,6 +2138,11 @@
             const hourlyData = {};
             for (let i = 0; i < 24; i++) hourlyData[i] = { total: 0, refund: 0 };
             
+            // 计算数据覆盖天数
+            const allDates = new Set();
+            parsedOrders.forEach(order => { if (order.date) allDates.add(order.date); });
+            const dayCount = allDates.size || 1;
+            
             parsedOrders.forEach(order => {
                 if (order.time && !isNaN(order.time.getTime())) {
                     const hour = order.time.getHours();
@@ -2145,7 +2154,7 @@
             const hours = [], countData = [], refundRates = [];
             for (let i = 0; i < 24; i++) {
                 hours.push(i + '时');
-                countData.push(hourlyData[i].total);
+                countData.push(Math.round(hourlyData[i].total / dayCount * 10) / 10); // 日均单数
                 const rate = hourlyData[i].total > 0 ? (hourlyData[i].refund / hourlyData[i].total * 100).toFixed(1) : 0;
                 refundRates.push(rate);
             }
@@ -2158,10 +2167,11 @@
                     maxHour = i;
                 }
             }
+            const maxDailyAvg = Math.round(maxCount / dayCount * 10) / 10;
             
             const insightEl = document.getElementById('salesInsight1');
             if (insightEl) {
-                insightEl.innerHTML = `📊 销售高峰时段: <strong>${maxHour}:00-${maxHour+1}:00</strong>，销售单数 <strong>${maxCount}</strong> 单`;
+                insightEl.innerHTML = `📊 销售高峰时段: <strong>${maxHour}:00-${maxHour+1}:00</strong>，日均 <strong>${maxDailyAvg}</strong> 单（共${dayCount}天）`;
             }
             
             hourlySalesChart.setOption({
@@ -2171,8 +2181,8 @@
                     formatter: function(params) {
                         let result = '<strong>' + params[0].name + '</strong><br/>';
                         params.forEach(p => {
-                            if (p.seriesName === '销售单数') {
-                                result += p.marker + ' ' + p.seriesName + ': ' + p.value + ' 单<br/>';
+                            if (p.seriesName === '日均单数') {
+                                result += p.marker + ' ' + p.seriesName + ': ' + p.value + ' 单/天<br/>';
                             } else {
                                 result += p.marker + ' ' + p.seriesName + ': ' + p.value + '%<br/>';
                             }
@@ -2219,14 +2229,18 @@
             if (weekdayChart) weekdayChart.dispose();
             weekdayChart = echarts.init(container);
             
-            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            const weekdayJsIndex = [1, 2, 3, 4, 5, 6, 0];
             const weekdayData = weekdays.map(() => ({ total: 0, refund: 0 }));
             
             parsedOrders.forEach(order => {
                 if (order.time && !isNaN(order.time.getTime())) {
-                    const day = order.time.getDay();
-                    weekdayData[day].total++;
-                    if (order.isRefund) weekdayData[day].refund++;
+                    const jsDay = order.time.getDay();
+                    const idx = weekdayJsIndex.indexOf(jsDay);
+                    if (idx >= 0) {
+                        weekdayData[idx].total++;
+                        if (order.isRefund) weekdayData[idx].refund++;
+                    }
                 }
             });
             
@@ -2283,36 +2297,42 @@
             if (weekdaySalesChart) weekdaySalesChart.dispose();
             weekdaySalesChart = echarts.init(container);
             
-            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            const weekdayJsIndex = [1, 2, 3, 4, 5, 6, 0];
             const weekdayData = weekdays.map(() => ({ total: 0, refund: 0 }));
             
+            // 计算每个星期几覆盖的周数
+            const weekdayWeekSets = weekdays.map(() => new Set());
             parsedOrders.forEach(order => {
-                if (order.time && !isNaN(order.time.getTime())) {
-                    const day = order.time.getDay();
-                    weekdayData[day].total++;
-                    if (order.isRefund) weekdayData[day].refund++;
+                if (order.time && !isNaN(order.time.getTime()) && order.date) {
+                    const jsDay = order.time.getDay();
+                    const idx = weekdayJsIndex.indexOf(jsDay);
+                    if (idx >= 0) {
+                        weekdayData[idx].total++;
+                        if (order.isRefund) weekdayData[idx].refund++;
+                        // 计算周数标识
+                        const d = new Date(order.date);
+                        const yearWeek = d.getFullYear() + '-' + Math.ceil((d.getDate() + new Date(d.getFullYear(), d.getMonth(), 1).getDay()) / 7);
+                        weekdayWeekSets[idx].add(yearWeek);
+                    }
                 }
             });
+            const weekdayWeekCount = weekdayWeekSets.map(s => s.size || 1);
             
-            const countData = weekdayData.map(d => d.total);
             const refundRates = weekdayData.map(d => d.total > 0 ? (d.refund / d.total * 100).toFixed(1) : 0);
+            const countData = weekdays.map((name, idx) => Math.round(weekdayData[idx].total / weekdayWeekCount[idx] * 10) / 10);
             
-            // 找出最高和最低
-            let maxCount = 0, minCount = Infinity, maxIdx = 0, minIdx = 0;
+            // 找出最高和最低（按周均）
+            let maxAvg = 0, minAvg = Infinity, maxIdx = 0, minIdx = 0;
             for (let i = 0; i < 7; i++) {
-                if (weekdayData[i].total > maxCount) {
-                    maxCount = weekdayData[i].total;
-                    maxIdx = i;
-                }
-                if (weekdayData[i].total > 0 && weekdayData[i].total < minCount) {
-                    minCount = weekdayData[i].total;
-                    minIdx = i;
-                }
+                const avg = weekdayData[i].total / weekdayWeekCount[i];
+                if (avg > maxAvg) { maxAvg = avg; maxIdx = i; }
+                if (avg > 0 && avg < minAvg) { minAvg = avg; minIdx = i; }
             }
             
             const insightEl = document.getElementById('salesInsight2');
             if (insightEl) {
-                insightEl.innerHTML = `📊 销售最高: <strong>${weekdays[maxIdx]}</strong> (${maxCount}单)，销售最低: <strong>${weekdays[minIdx]}</strong> (${minCount}单)`;
+                insightEl.innerHTML = `📊 周均最高: <strong>${weekdays[maxIdx]}</strong> (${maxAvg.toFixed(1)}单/周)，周均最低: <strong>${weekdays[minIdx]}</strong> (${minAvg.toFixed(1)}单/周)`;
             }
             
             weekdaySalesChart.setOption({
@@ -2322,7 +2342,7 @@
                     formatter: function(params) {
                         let result = '<strong>' + params[0].name + '</strong><br/>';
                         params.forEach(p => {
-                            if (p.seriesName === '销售单数') {
+                            if (p.seriesName === '周均单数') {
                                 result += p.marker + ' ' + p.seriesName + ': ' + p.value + ' 单<br/>';
                             } else {
                                 result += p.marker + ' ' + p.seriesName + ': ' + p.value + '%<br/>';
@@ -2331,16 +2351,16 @@
                         return result;
                     }
                 },
-                legend: { data: ['销售单数', '退款率'], top: 0, textStyle: { color: '#666', fontSize: 12 } },
+                legend: { data: ['周均单数', '退款率'], top: 0, textStyle: { color: '#666', fontSize: 12 } },
                 grid: { left: '3%', right: '4%', bottom: '3%', top: '45px', containLabel: true },
                 xAxis: { type: 'category', data: weekdays, axisLabel: { color: '#666' } },
                 yAxis: [
-                    { type: 'value', name: '销售单数', axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
+                    { type: 'value', name: '周均单数', axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#f0f0f0' } } },
                     { type: 'value', name: '退款率%', max: 55, axisLabel: { color: '#666', formatter: '{value}%' }, splitLine: { show: false } }
                 ],
                 series: [
                     { 
-                        name: '销售单数', 
+                        name: '周均单数', 
                         type: 'bar', 
                         data: countData,
                         itemStyle: { 
